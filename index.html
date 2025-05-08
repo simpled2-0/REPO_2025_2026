@@ -79,7 +79,7 @@
             transform: translate(-50%, -50%);
             background-color: rgba(30, 30, 30, 0.95);
             color: white;
-            padding: 20px;
+            padding: 20px}f
             border-radius: 10px;
             z-index: 2147483648;
             font-family: sans-serif;
@@ -117,7 +117,7 @@
     </div>
 
     <div id="consent-popup">
-        <p>We would like to collect feedback you submit to improve our site. Do you consent to this data collection?</p>
+        <p>We collect feedback and in-game chat messages you submit to improve our site. Do you consent to this data collection?</p>
         <button onclick="grantConsent()">Allow</button>
         <button onclick="denyConsent()">Deny</button>
     </div>
@@ -177,7 +177,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        feedback: feedback,
+                        type: 'feedback',
+                        content: feedback,
                         timestamp: new Date().toISOString()
                     })
                 });
@@ -190,6 +191,26 @@
             } catch (error) {
                 console.error('Error submitting feedback:', error);
                 alert('Error submitting feedback.');
+            }
+        }
+        
+        // Placeholder for capturing in-game chat (requires Eaglercraft API integration)
+        function captureChatMessage(message) {
+            if (!hasConsent) return;
+            try {
+                fetch('https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'chat',
+                        content: message,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+            } catch (error) {
+                console.error('Error sending chat message:', error);
             }
         }
         
