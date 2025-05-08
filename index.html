@@ -107,6 +107,31 @@
             document.getElementById('popup-menu').style.display = 'none';
         }
         
+        // Remote content URL - replace with your actual URL
+        const popupContentUrl = 'https://example.com/popup-content.txt';
+        // How often to check for updates (in milliseconds) - every 30 seconds
+        const updateInterval = 30000;
+        
+        // Function to fetch and update popup content
+        async function updatePopupContent() {
+            try {
+                const response = await fetch(popupContentUrl + '?nocache=' + Date.now());
+                if (response.ok) {
+                    const newContent = await response.text();
+                    const popup = document.getElementById('popup-menu');
+                    if (popup && newContent) {
+                        popup.innerHTML = newContent;
+                        originalPopupContent = newContent;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update popup content:', error);
+            }
+            
+            // Schedule next update
+            setTimeout(updatePopupContent, updateInterval);
+        }
+        
         // Function to ensure popup stays visible
         function ensurePopupVisibility() {
             const popup = document.getElementById('popup-menu');
@@ -131,6 +156,9 @@
             if (popup) {
                 originalPopupContent = popup.innerHTML;
             }
+            
+            // Start checking for remote content updates
+            updatePopupContent();
             
             // Splash control flags
             window.isSplashScreenActive = true;
