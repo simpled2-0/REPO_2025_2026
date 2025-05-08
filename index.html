@@ -44,18 +44,32 @@
 
         #popup-menu {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 0;
+            left: 0;
+            width: 100%;
             background-color: rgba(30, 30, 30, 0.95);
             color: white;
             padding: 15px;
-            border-radius: 10px;
             z-index: 2147483647;
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             pointer-events: auto !important;
             visibility: visible !important;
             opacity: 1 !important;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        #popup-menu p {
+            display: inline-block;
+            margin: 0;
+            padding: 0 20px;
+            animation: marquee 15s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
         }
 
         #popup-menu button {
@@ -79,7 +93,7 @@
         <img src="Splash.png" alt="Custom Splash Screen">
     </div>
 
-    <div id="popup-menu">
+    <div id="popup-menu47">
         <p>PUBES VS GOON WAR</p>
         <p>I am testing a new feature</p>
         <p>with a automatic news updater</p>
