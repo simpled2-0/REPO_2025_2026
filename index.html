@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="und" style="width:100%;height:100%;background-color:black;">
+<html lang="en" style="width:100%;height:100%;background-color:black;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
@@ -53,9 +53,6 @@
             z-index: 2147483647;
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            pointer-events: auto !important;
-            visibility: visible !important;
-            opacity: 1 !important;
             overflow: hidden;
             white-space: nowrap;
         }
@@ -93,7 +90,7 @@
         <img src="Splash.png" alt="Custom Splash Screen">
     </div>
 
-    <div id="popup-menu47">
+    <div id="popup-menu">
         <p>PUBES VS GOON WAR</p>
         <p>I am testing a new feature</p>
         <p>with a automatic news updater</p>
@@ -102,23 +99,12 @@
 
     <script type="text/javascript">
         "use strict";
-        
+
         let originalPopupContent = '';
-        
-        window.addEventListener('DOMContentLoaded', () => {
-            const popup = document.getElementById('popup-menu');
-            if (popup) {
-                originalPopupContent = popup.innerHTML;
-            }
-        });
-        
-        function closePopup() {
-            document.getElementById('popup-menu').style.display = 'none';
-        }
-        
+
         const popupContentUrl = 'https://raw.githubusercontent.com/maskedwrrg/repo/refs/heads/main/popup-content.txt';
         const updateInterval = 30000;
-        
+
         async function updatePopupContent() {
             try {
                 const response = await fetch(popupContentUrl + '?nocache=' + Date.now());
@@ -133,21 +119,18 @@
             } catch (error) {
                 console.error('Failed to update popup content:', error);
             }
-            
+
             setTimeout(updatePopupContent, updateInterval);
         }
-        
+
         function ensurePopupVisibility() {
             const popup = document.getElementById('popup-menu');
-            if (popup) {
-                document.body.appendChild(popup);
+            if (popup && popup.style.display !== 'block') {
                 popup.style.zIndex = '2147483647';
                 popup.style.visibility = 'visible';
                 popup.style.display = 'block';
                 popup.style.opacity = '1';
             }
-            
-            setTimeout(ensurePopupVisibility, 1000);
         }
 
         window.addEventListener("load", async function () {
@@ -155,9 +138,10 @@
             if (popup) {
                 originalPopupContent = popup.innerHTML;
             }
-            
+
             updatePopupContent();
-            
+            ensurePopupVisibility();
+
             window.isSplashScreenActive = true;
             window.suppressSplashScreens = true;
 
@@ -211,26 +195,26 @@
             } catch (e) {
                 console.error("Error during game initialization:", e);
             }
-
-            ensurePopupVisibility();
         });
-        
+
+        // Recreate popup if removed (optional safeguard)
         window.addEventListener('DOMContentLoaded', () => {
-            const originalPopup = document.getElementById('popup-menu');
-            if (originalPopup) {
-                originalPopupContent = originalPopup.innerHTML;
+            const popup = document.getElementById('popup-menu');
+            if (popup) {
+                originalPopupContent = popup.innerHTML;
             }
-            
-            const observer = new MutationObserver(mutations => {
+
+            const observer = new MutationObserver(() => {
                 const popup = document.getElementById('popup-menu');
-                if (!popup || !document.body.contains(popup)) {
+                if (!popup) {
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
                     newPopup.innerHTML = originalPopupContent;
                     document.body.appendChild(newPopup);
+                    ensurePopupVisibility();
                 }
             });
-            
+
             observer.observe(document.body, {
                 childList: true,
                 subtree: true
