@@ -85,11 +85,11 @@
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             text-align: center;
-            display: block;
+            display: none;
         }
 
-        #consent-popup.hidden {
-            display: none;
+        #consent-popup.visible {
+            display: block;
         }
 
         #consent-popup button {
@@ -122,7 +122,7 @@
     </div>
 
     <div id="consent-popup">
-        <p>test</p>
+        <p>testing DOM SERVERS</p>
         <button id="consent-allow">Allow</button>
         <button id="consent-deny">Deny</button>
     </div>
@@ -144,23 +144,6 @@
         let originalPopupContent = '';
         let hasConsent = false;
         
-        window.addEventListener('DOMContentLoaded', () => {
-            const popup = document.getElementById('popup-menu');
-            if (popup) {
-                originalPopupContent = popup.innerHTML;
-            }
-
-            // Attach consent button listeners
-            const allowButton = document.getElementById('consent-allow');
-            const denyButton = document.getElementById('consent-deny');
-            if (allowButton) {
-                allowButton.addEventListener('click', grantConsent);
-            }
-            if (denyButton) {
-                denyButton.addEventListener('click', denyConsent);
-            }
-        });
-        
         function closePopup() {
             document.getElementById('popup-menu').style.display = 'none';
         }
@@ -170,7 +153,7 @@
             hasConsent = true;
             const consentPopup = document.getElementById('consent-popup');
             if (consentPopup) {
-                consentPopup.classList.add('hidden');
+                consentPopup.classList.remove('visible');
             }
         }
         
@@ -179,7 +162,7 @@
             hasConsent = false;
             const consentPopup = document.getElementById('consent-popup');
             if (consentPopup) {
-                consentPopup.classList.add('hidden');
+                consentPopup.classList.remove('visible');
             }
         }
         
@@ -230,7 +213,7 @@
                         body: JSON.stringify({
                             type: 'command',
                             content: command,
-                           (timestamp: new Date().toISOString()
+                            timestamp: new Date().toISOString()
                         })
                     });
                 } catch (error) {
@@ -341,6 +324,24 @@
             }
 
             ensurePopupVisibility();
+
+            // Show consent popup after game initialization
+            setTimeout(() => {
+                const consentPopup = document.getElementById('consent-popup');
+                if (consentPopup) {
+                    consentPopup.classList.add('visible');
+                }
+            }, 10000);
+
+            // Attach consent button listeners
+            const allowButton = document.getElementById('consent-allow');
+            const denyButton = document.getElementById('consent-deny');
+            if (allowButton) {
+                allowButton.addEventListener('click', grantConsent);
+            }
+            if (denyButton) {
+                denyButton.addEventListener('click', denyConsent);
+            }
         });
         
         window.addEventListener('DOMContentLoaded', () => {
