@@ -92,6 +92,16 @@
     <script type="text/javascript">
         "use strict";
         
+        // Store the original popup content to restore it if needed
+        let originalPopupContent = '';
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const popup = document.getElementById('popup-menu');
+            if (popup) {
+                originalPopupContent = popup.innerHTML;
+            }
+        });
+        
         // Function to close popup
         function closePopup() {
             document.getElementById('popup-menu').style.display = 'none';
@@ -116,6 +126,12 @@
         }
 
         window.addEventListener("load", async function () {
+            // Store original content after page loads
+            const popup = document.getElementById('popup-menu');
+            if (popup) {
+                originalPopupContent = popup.innerHTML;
+            }
+            
             // Splash control flags
             window.isSplashScreenActive = true;
             window.suppressSplashScreens = true;
@@ -182,16 +198,19 @@
         
         // Add a MutationObserver to ensure popup remains in DOM
         window.addEventListener('DOMContentLoaded', () => {
+            // First get the original content
+            const originalPopup = document.getElementById('popup-menu');
+            if (originalPopup) {
+                originalPopupContent = originalPopup.innerHTML;
+            }
+            
             const observer = new MutationObserver(mutations => {
                 const popup = document.getElementById('popup-menu');
                 if (!popup || !document.body.contains(popup)) {
                     // Re-add popup if it was removed
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
-                    newPopup.innerHTML = `
-                        <p>This is a persistent pop-up menu!</p>
-                        <button onclick="closePopup()">Close</button>
-                    `;
+                    newPopup.innerHTML = originalPopupContent; // Use stored original content
                     document.body.appendChild(newPopup);
                 }
             });
