@@ -5,12 +5,112 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
 		<meta name="description" content="Eaglercraft 1.12 test directory HTML page">
 		<meta name="keywords" content="eaglercraft, eaglercraftx, minecraft, 1.12, 1.12.2">
-		<title>Repository client</title>
+		<title>Eaglercraft 1.12.2</title>
 		<meta property="og:locale" content="en-US">
 		<meta property="og:type" content="website">
 		<meta property="og:title" content="Eaglercraft 1.12.2">
 		<meta property="og:description" content="test directory HTML page">
 		<link type="image/png" rel="shortcut icon" href="favicon.png">
+		<!-- Load custom script to override internal splash screen before classes.js loads -->
+		<script type="text/javascript">
+			// Create a proxy to intercept the drawSplashScreen function
+			window.splashOverrideApplied = false;
+			
+			// Save original definitions
+			const originalDefineProperty = Object.defineProperty;
+			const originalDefineProperties = Object.defineProperties;
+			
+			// Override defineProperty to intercept splash screen function definitions
+			Object.defineProperty = function(obj, prop, descriptor) {
+				// Check if this is the splash screen function being defined
+				if (prop === "drawSplashScreen" || 
+					(descriptor && descriptor.value && 
+					 typeof descriptor.value === "function" && 
+					 descriptor.value.toString().includes("drawSplashScreen"))) {
+					
+					console.log("Intercepted drawSplashScreen definition");
+					// Replace the function with an empty one
+					const originalFunction = descriptor.value;
+					descriptor.value = function() {
+						// Do nothing - skip internal splash screen
+						window.splashOverrideApplied = true;
+						return;
+					};
+				}
+				
+				// Continue with the original defineProperty
+				return originalDefineProperty.apply(this, arguments);
+			};
+			
+			// Override defineProperties to catch batch definitions
+			Object.defineProperties = function(obj, props) {
+				// Check each property for splash screen related functions
+				for (const prop in props) {
+					if (prop === "drawSplashScreen" || 
+						(props[prop] && props[prop].value && 
+						 typeof props[prop].value === "function" && 
+						 props[prop].value.toString().includes("drawSplashScreen"))) {
+						
+						console.log("Intercepted drawSplashScreen in defineProperties");
+						// Replace the function with an empty one
+						const originalFunction = props[prop].value;
+						props[prop].value = function() {
+							// Do nothing - skip internal splash screen
+							window.splashOverrideApplied = true;
+							return;
+						};
+					}
+				}
+				
+				// Continue with the original defineProperties
+				return originalDefineProperties.apply(this, arguments);
+			};
+			
+			// Backup method: Direct override after a short delay
+			window.addEventListener("DOMContentLoaded", function() {
+				setTimeout(function() {
+					// Try to find and override the function directly
+					for (const key in window) {
+						if (key && window[key]) {
+							// Check if this object has the drawSplashScreen function
+							if (typeof window[key].drawSplashScreen === "function") {
+								console.log("Found drawSplashScreen on window." + key);
+								window[key].drawSplashScreen = function() {
+									// Do nothing - skip internal splash screen
+									window.splashOverrideApplied = true;
+									return;
+								};
+							}
+							
+							// Check prototype
+							if (window[key].prototype && typeof window[key].prototype.drawSplashScreen === "function") {
+								console.log("Found drawSplashScreen on window." + key + ".prototype");
+								window[key].prototype.drawSplashScreen = function() {
+									// Do nothing - skip internal splash screen
+									window.splashOverrideApplied = true;
+									return;
+								};
+							}
+							
+							// Check for refreshResources, BAd, and Fke as they were mentioned together
+							for (const subKey of ["refreshResources", "BAd", "Fke"]) {
+								if (typeof window[key][subKey] === "function") {
+									if (window[key][subKey].toString().includes("drawSplashScreen")) {
+										console.log(`Found ${subKey} containing drawSplashScreen reference`);
+										// Override the function that calls drawSplashScreen
+										window[key][subKey] = function() {
+											// Minimal implementation to avoid breaking game
+											window.splashOverrideApplied = true;
+											return;
+										};
+									}
+								}
+							}
+						}
+					}
+				}, 100); // Short delay to ensure classes.js has loaded
+			});
+		</script>
 		<script type="text/javascript" src="classes.js"></script>
 		<script src="/js/ga4.js"></script>
 		<style>
