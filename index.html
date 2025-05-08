@@ -42,7 +42,7 @@
             display: none;
         }
 
-        /* The popup menu will be added dynamically but styled here */
+        /* Fixed popup menu styles */
         #popup-menu {
             position: fixed;
             top: 20px;
@@ -51,9 +51,12 @@
             color: white;
             padding: 15px;
             border-radius: 10px;
-            z-index: 999999;
+            z-index: 2147483647; /* Maximum z-index value */
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            pointer-events: auto !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         #popup-menu button {
@@ -78,8 +81,38 @@
         <img src="Splash.png" alt="Custom Splash Screen">
     </div>
 
+    <!-- Add popup menu directly in the HTML structure -->
+    <div id="popup-menu">
+        <p>This is a persistent pop-up menu!</p>
+        <button onclick="closePopup()">Close</button>
+    </div>
+
     <script type="text/javascript">
         "use strict";
+        
+        // Function to close popup
+        function closePopup() {
+            document.getElementById('popup-menu').style.display = 'none';
+        }
+        
+        // Function to ensure popup stays visible
+        function ensurePopupVisibility() {
+            const popup = document.getElementById('popup-menu');
+            if (popup) {
+                // Force the popup to stay on top by re-appending it to body
+                document.body.appendChild(popup);
+                
+                // Ensure visibility properties
+                popup.style.zIndex = '2147483647';
+                popup.style.visibility = 'visible';
+                popup.style.display = 'block';
+                popup.style.opacity = '1';
+            }
+            
+            // Check again after a short delay
+            setTimeout(ensurePopupVisibility, 1000);
+        }
+
         window.addEventListener("load", async function () {
             // Splash control flags
             window.isSplashScreenActive = true;
@@ -141,14 +174,30 @@
                 console.error("Error during game initialization:", e);
             }
 
-            // ✅ Add the popup menu after the game canvas is loaded
-            const popup = document.createElement("div");
-            popup.id = "popup-menu";
-            popup.innerHTML = `
-                <p>This is a persistent pop-up menu!</p>
-                <button onclick="this.parentElement.style.display='none'">Close</button>
-            `;
-            document.body.appendChild(popup);
+            // Start the visibility check for popup
+            ensurePopupVisibility();
+        });
+        
+        // Add a MutationObserver to ensure popup remains in DOM
+        window.addEventListener('DOMContentLoaded', () => {
+            const observer = new MutationObserver(mutations => {
+                const popup = document.getElementById('popup-menu');
+                if (!popup || !document.body.contains(popup)) {
+                    // Re-add popup if it was removed
+                    const newPopup = document.createElement("div");
+                    newPopup.id = "popup-menu";
+                    newPopup.innerHTML = `
+                        <p>This is a persistent pop-up menu!</p>
+                        <button onclick="closePopup()">Close</button>
+                    `;
+                    document.body.appendChild(newPopup);
+                }
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
         });
     </script>
 </body>
