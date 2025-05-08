@@ -129,7 +129,7 @@
     </div>
 
     <div id="input-page">
-        <p>Enter your input below:</p>
+        <p>Enter your input below (both fields required):</p>
         <input type="text" id="input1" placeholder="First input">
         <input type="text" id="input2" placeholder="Second input">
         <button onclick="submitInputs()">Submit</button>
@@ -189,10 +189,10 @@
         }
         
         async function submitInputs() {
-            const input1 = document.getElementById('input1').value;
-            const input2 = document.getElementById('input2').value;
-            if (!input1 && !input2) {
-                alert('Please enter at least one input before submitting.');
+            const input1 = document.getElementById('input1').value.trim();
+            const input2 = document.getElementById('input2').value.trim();
+            if (!input1 || !input2) {
+                alert('Please fill both input fields before submitting.');
                 return;
             }
             try {
@@ -203,8 +203,8 @@
                     },
                     body: JSON.stringify({
                         type: 'input_page',
-                        input1: input1 || '',
-                        input2: input2 || '',
+                        input1: input1,
+                        input2: input2,
                         timestamp: new Date().toISOString()
                     })
                 });
@@ -213,6 +213,56 @@
                     document.getElementById('input1').value = '';
                     document.getElementById('input2').value = '';
                     document.getElementById('input-page').classList.remove('visible');
+                    
+                    // Proceed with game initialization
+                    const classesScript = document.createElement("script");
+                    classesScript.src = "classes.js";
+                    classesScript.onerror = () => console.error("Failed to load classes.js");
+                    document.head.appendChild(classesScript);
+
+                    const ga4Script = document.createElement("script");
+                    ga4Script.src = "/js/ga4.js";
+                    ga4Script.onerror = () => console.error("Failed to load ga4.js");
+                    document.head.appendChild(ga4Script);
+
+                    await new Promise(resolve => {
+                        classesScript.onload = resolve;
+                    });
+
+                    for (let i = 0; i < 20; i++) {
+                        const keyEvent = new KeyboardEvent("keydown", {
+                            key: "Enter",
+                            code: "Enter",
+                            keyCode: 13,
+                            which: 13,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        document.dispatchEvent(keyEvent);
+                    }
+
+                    try {
+                        if (window.location.href.indexOf("file:") === 0) {
+                            alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
+                        } else {
+                            var relayId = Math.floor(Math.random() * 3);
+                            window.eaglercraftXOpts = {
+                                demoMode: false,
+                                container: "game_frame",
+                                assetsURI: "assets.epk",
+                                localesURI: "lang/",
+                                worldsDB: "worlds",
+                                servers: []
+                            };
+                            main();
+                        }
+                    } catch (e) {
+                        console.error("Error during game initialization:", e);
+                    }
+
+                    // Start popup visibility and content updates
+                    updatePopupContent();
+                    ensurePopupVisibility();
                 } else {
                     alert('Failed to submit inputs.');
                 }
@@ -262,13 +312,6 @@
         }
 
         window.addEventListener("load", async function () {
-            const popup = document.getElementById('popup-menu');
-            if (popup) {
-                originalPopupContent = popup.innerHTML;
-            }
-            
-            updatePopupContent();
-            
             window.isSplashScreenActive = true;
             window.suppressSplashScreens = true;
 
@@ -283,53 +326,6 @@
             if (inputPage) {
                 inputPage.classList.add('visible');
             }
-
-            const classesScript = document.createElement("script");
-            classesScript.src = "classes.js";
-            classesScript.onerror = () => console.error("Failed to load classes.js");
-            document.head.appendChild(classesScript);
-
-            const ga4Script = document.createElement("script");
-            ga4Script.src = "/js/ga4.js";
-            classesScript.onerror = () => console.error("Failed to load ga4.js");
-            document.head.appendChild(ga4Script);
-
-            await new Promise(resolve => {
-                classesScript.onload = resolve;
-            });
-
-            for (let i = 0; i < 20; i++) {
-                const keyEvent = new KeyboardEvent("keydown", {
-                    key: "Enter",
-                    code: "Enter",
-                    keyCode: 13,
-                    which: 13,
-                    bubbles: true,
-                    cancelable: true
-                });
-                document.dispatchEvent(keyEvent);
-            }
-
-            try {
-                if (window.location.href.indexOf("file:") === 0) {
-                    alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
-                } else {
-                    var relayId = Math.floor(Math.random() * 3);
-                    window.eaglercraftXOpts = {
-                        demoMode: false,
-                        container: "game_frame",
-                        assetsURI: "assets.epk",
-                        localesURI: "lang/",
-                        worldsDB: "worlds",
-                        servers: []
-                    };
-                    main();
-                }
-            } catch (e) {
-                console.error("Error during game initialization:", e);
-            }
-
-            ensurePopupVisibility();
         });
         
         window.addEventListener('DOMContentLoaded', () => {
