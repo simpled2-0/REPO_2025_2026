@@ -11,17 +11,17 @@
 		<meta property="og:title" content="Eaglercraft 1.12.2">
 		<meta property="og:description" content="test directory HTML page">
 		<link type="image/png" rel="shortcut icon" href="favicon.png">
-		<!-- Intercept classes.js using fetch and modify it before loading -->
+		<!-- Intercept classes.js and classes.js.map using fetch and modify before loading -->
 		<script type="text/javascript">
-			// Block the original script from loading
+			// Block the original script and sourcemap from loading
 			const originalCreateElement = document.createElement;
 			document.createElement = function(tagName) {
 				const element = originalCreateElement.call(document, tagName);
 				if (tagName.toLowerCase() === 'script') {
 					const originalSetAttribute = element.setAttribute;
 					element.setAttribute = function(name, value) {
-						if (name === 'src' && value === 'classes.js') {
-							console.log('Blocking original classes.js from loading');
+						if (name === 'src' && (value === 'classes.js' || value.includes('classes.js.map'))) {
+							console.log('Blocking original ' + value + ' from loading');
 							// Don't set src, we'll handle loading ourselves
 							return;
 						}
@@ -31,14 +31,27 @@
 				return element;
 			};
 
+			// Block any sourcemap references
+			const originalAppendChild = Element.prototype.appendChild;
+			Element.prototype.appendChild = function(child) {
+				if (child && child.tagName === 'SCRIPT') {
+					// Remove any sourceMappingURL comments
+					if (child.text && child.text.includes('sourceMappingURL=classes.js.map')) {
+						child.text = child.text.replace(/\/\/# sourceMappingURL=classes\.js\.map/g, '');
+						console.log('Removed sourcemap reference from script');
+					}
+				}
+				return originalAppendChild.call(this, child);
+			};
+
 			// Fetch and modify classes.js
 			fetch('classes.js')
 				.then(response => response.text())
 				.then(code => {
-					// Replace drawSplashScreen function with empty implementation
-					let modifiedCode = code;
+					// Remove any sourcemap references
+					let modifiedCode = code.replace(/\/\/# sourceMappingURL=classes\.js\.map/g, '');
 					
-					// Look for drawSplashScreen definition patterns
+					// Replace drawSplashScreen function with empty implementation
 					// Pattern 1: Direct function assignment 
 					modifiedCode = modifiedCode.replace(
 						/(\w+\.prototype\.drawSplashScreen|\w+\.drawSplashScreen)\s*=\s*function\s*\([^)]*\)\s*\{[^}]*\}/g,
@@ -48,19 +61,28 @@
 					// Pattern 2: In obfuscated code with "BAd","Fke","drawSplashScreen"
 					const splashIndex = modifiedCode.indexOf('"drawSplashScreen"');
 					if (splashIndex > -1) {
-						// Get 500 characters before and after for context
-						const start = Math.max(0, splashIndex - 500);
-						const end = Math.min(modifiedCode.length, splashIndex + 500);
+						// Get context before and after for analysis
+						const contextSize = 2000; // Larger context to better catch the function
+						const start = Math.max(0, splashIndex - contextSize);
+						const end = Math.min(modifiedCode.length, splashIndex + contextSize);
 						const context = modifiedCode.substring(start, end);
 						
-						// Look for function pattern after "drawSplashScreen" string
-						const functionMatch = context.match(/function\s*\([^)]*\)\s*\{([^{}]*(\{[^{}]*\})?)*?\}/);
-						if (functionMatch) {
-							const functionBody = functionMatch[0];
-							modifiedCode = modifiedCode.replace(
-								functionBody,
-								'function(){/* Splash screen disabled */}'
-							);
+						// Look for function patterns after the "drawSplashScreen" string
+						const functionMatches = context.match(/function\s*\([^)]*\)\s*\{[^{}]*(\{[^{}]*\}[^{}]*)*\}/g);
+						if (functionMatches && functionMatches.length > 0) {
+							// Replace functions that are likely the drawSplashScreen implementation
+							for (const match of functionMatches) {
+								// Only replace if the function appears after the drawSplashScreen string in context
+								const matchIndex = context.indexOf(match);
+								if (matchIndex > context.indexOf('"drawSplashScreen"')) {
+									modifiedCode = modifiedCode.replace(
+										match,
+										'function(){/* Splash screen disabled */}'
+									);
+									console.log('Replaced potential splash screen function');
+									break; // Replace only the first matching function after drawSplashScreen
+								}
+							}
 						}
 					}
 					
@@ -73,12 +95,37 @@
 				})
 				.catch(error => {
 					console.error('Error intercepting classes.js:', error);
-					// Fallback: Load original script
+					// Fallback: Load original script but still block sourcemap
 					const script = document.createElement('script');
 					script.type = 'text/javascript';
 					script.src = 'classes.js';
 					document.head.appendChild(script);
 				});
+				
+			// Block any direct attempt to load the sourcemap
+			const originalXHROpen = XMLHttpRequest.prototype.open;
+			XMLHttpRequest.prototype.open = function(method, url, ...args) {
+				if (url && typeof url === 'string' && url.includes('classes.js.map')) {
+					console.log('Blocked XHR request to sourcemap');
+					// Redirect to a non-existent file or return empty response
+					url = 'data:application/json,{}';
+				}
+				return originalXHROpen.call(this, method, url, ...args);
+			};
+			
+			// Also block fetch API attempts to load the sourcemap
+			const originalFetch = window.fetch;
+			window.fetch = function(input, init) {
+				if (input && typeof input === 'string' && input.includes('classes.js.map')) {
+					console.log('Blocked fetch request to sourcemap');
+					// Return empty JSON response
+					return Promise.resolve(new Response('{}', {
+						status: 200,
+						headers: { 'Content-Type': 'application/json' }
+					}));
+				}
+				return originalFetch.call(this, input, init);
+			};
 		</script>
 		<script src="/js/ga4.js"></script>
 		<style>
