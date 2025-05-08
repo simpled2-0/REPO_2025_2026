@@ -11,14 +11,58 @@
         <meta property="og:title" content="Eaglercraft 1.12.2">
         <meta property="og:description" content="test directory HTML page">
         <link type="image/png" rel="shortcut icon" href="favicon.png">
-        <script type="text/javascript" src="classes.js"></script>
-        <script src="/js/ga4.js"></script>
+        <style>
+            #splash-screen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            #splash-screen img {
+                max-width: 50%;
+                max-height: 50%;
+            }
+            #splash-screen.hidden {
+                display: none;
+            }
+        </style>
+    </head>
+    <body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
+        <div id="splash-screen">
+            <img src="favicon.png" alt="Eaglercraft Logo">
+        </div>
         <script type="text/javascript">
             "use strict";
-            window.addEventListener("load", function() {
+            window.addEventListener("load", async function() {
+                // Show splash screen for 5 seconds
+                const splashScreen = document.getElementById("splash-screen");
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                splashScreen.classList.add("hidden");
+
+                // Dynamically load scripts after splash screen
+                const classesScript = document.createElement("script");
+                classesScript.src = "classes.js";
+                document.head.appendChild(classesScript);
+
+                const ga4Script = document.createElement("script");
+                ga4Script.src = "/js/ga4.js";
+                document.head.appendChild(ga4Script);
+
+                // Wait for classes.js to load before proceeding
+                await new Promise(resolve => {
+                    classesScript.onload = resolve;
+                });
+
+                // Original initialization code
                 if(window.location.href.indexOf("file:") === 0) {
                     alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
-                }else {
+                } else {
                     var relayId = Math.floor(Math.random() * 3);
                     window.eaglercraftXOpts = {
                         demoMode: false,
@@ -32,7 +76,5 @@
                 }
             });
         </script>
-    </head>
-    <body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
     </body>
 </html>
