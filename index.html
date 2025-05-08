@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="width:100%;height:100%;background-color:black;">
+<html lang="und" style="width:100%;height:100%;background-color:black;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
@@ -49,7 +49,7 @@
             width: 100%;
             background-color: rgba(30, 30, 30, 0.95);
             color: white;
-            padding: 15px;
+            padding: 15px 0;
             z-index: 2147483647;
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -57,30 +57,21 @@
             white-space: nowrap;
         }
 
-        #popup-menu p {
+        #popup-content {
             display: inline-block;
+            padding-left: 100%;
+            animation: marquee 20s linear infinite;
+        }
+
+        #popup-content p {
+            display: inline;
             margin: 0;
-            padding: 0 20px;
-            animation: marquee 15s linear infinite;
+            padding: 0 30px;
         }
 
         @keyframes marquee {
-            0% { transform: translateX(100vw); }
+            0% { transform: translateX(0); }
             100% { transform: translateX(-100%); }
-        }
-
-        #popup-menu button {
-            margin-top: 10px;
-            padding: 5px 10px;
-            border: none;
-            background: #444;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #popup-menu button:hover {
-            background: #666;
         }
     </style>
 </head>
@@ -91,16 +82,25 @@
     </div>
 
     <div id="popup-menu">
-        <p>PUBES VS GOON WAR</p>
-        <p>I am testing a new feature</p>
-        <p>with a automatic news updater</p>
-        <p>Email me if you have any ideas for this</p>
+        <div id="popup-content">
+            <p>PUBES VS GOON WAR</p>
+            <p>I am testing a new feature</p>
+            <p>with an automatic news updater</p>
+            <p>Email me if you have any ideas for this</p>
+        </div>
     </div>
 
     <script type="text/javascript">
         "use strict";
-
+        
         let originalPopupContent = '';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const popup = document.getElementById('popup-content');
+            if (popup) {
+                originalPopupContent = popup.innerHTML;
+            }
+        });
 
         const popupContentUrl = 'https://raw.githubusercontent.com/maskedwrrg/repo/refs/heads/main/popup-content.txt';
         const updateInterval = 30000;
@@ -110,7 +110,7 @@
                 const response = await fetch(popupContentUrl + '?nocache=' + Date.now());
                 if (response.ok) {
                     const newContent = await response.text();
-                    const popup = document.getElementById('popup-menu');
+                    const popup = document.getElementById('popup-content');
                     if (popup && newContent) {
                         popup.innerHTML = newContent;
                         originalPopupContent = newContent;
@@ -119,28 +119,23 @@
             } catch (error) {
                 console.error('Failed to update popup content:', error);
             }
-
             setTimeout(updatePopupContent, updateInterval);
         }
 
         function ensurePopupVisibility() {
             const popup = document.getElementById('popup-menu');
-            if (popup && popup.style.display !== 'block') {
+            if (popup) {
+                document.body.appendChild(popup);
                 popup.style.zIndex = '2147483647';
                 popup.style.visibility = 'visible';
                 popup.style.display = 'block';
                 popup.style.opacity = '1';
             }
+            setTimeout(ensurePopupVisibility, 1000);
         }
 
         window.addEventListener("load", async function () {
-            const popup = document.getElementById('popup-menu');
-            if (popup) {
-                originalPopupContent = popup.innerHTML;
-            }
-
             updatePopupContent();
-            ensurePopupVisibility();
 
             window.isSplashScreenActive = true;
             window.suppressSplashScreens = true;
@@ -195,23 +190,27 @@
             } catch (e) {
                 console.error("Error during game initialization:", e);
             }
+
+            ensurePopupVisibility();
         });
 
-        // Recreate popup if removed (optional safeguard)
         window.addEventListener('DOMContentLoaded', () => {
-            const popup = document.getElementById('popup-menu');
-            if (popup) {
-                originalPopupContent = popup.innerHTML;
+            const originalPopup = document.getElementById('popup-content');
+            if (originalPopup) {
+                originalPopupContent = originalPopup.innerHTML;
             }
 
             const observer = new MutationObserver(() => {
                 const popup = document.getElementById('popup-menu');
-                if (!popup) {
+                const content = document.getElementById('popup-content');
+                if (!popup || !content || !document.body.contains(popup)) {
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
-                    newPopup.innerHTML = originalPopupContent;
+                    const innerDiv = document.createElement("div");
+                    innerDiv.id = "popup-content";
+                    innerDiv.innerHTML = originalPopupContent;
+                    newPopup.appendChild(innerDiv);
                     document.body.appendChild(newPopup);
-                    ensurePopupVisibility();
                 }
             });
 
