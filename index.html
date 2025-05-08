@@ -40,14 +40,15 @@
         <script type="text/javascript">
             "use strict";
             window.addEventListener("load", async function() {
-                // Set flag to indicate main splash screen is active
+                // Set flags to indicate main splash screen is active and suppress others
                 window.isSplashScreenActive = true;
+                window.suppressSplashScreens = true;
 
                 // Show splash screen for 5 seconds
                 const splashScreen = document.getElementById("splash-screen");
                 await new Promise(resolve => setTimeout(resolve, 5000));
 
-                // Clear splash screen flag
+                // Clear isSplashScreenActive flag but keep suppressSplashScreens
                 window.isSplashScreenActive = false;
 
                 // Dynamically load scripts
@@ -97,10 +98,9 @@
                 }
             });
 
-            // Note: If classes.js creates its own splash screen, ensure it checks
-            // window.isSplashScreenActive and skips its splash screen logic if true.
-            // Example in classes.js:
-            // if (window.isSplashScreenActive) { return; /* skip splash screen */ }
+            // Note: Ensure classes.js and ga4.js check window.suppressSplashScreens
+            // and skip their splash screen logic if true. Example in classes.js or ga4.js:
+            // if (window.suppressSplashScreens) { return; /* skip splash screen */ }
         </script>
     </body>
 </html>
