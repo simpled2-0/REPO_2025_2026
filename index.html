@@ -85,6 +85,11 @@
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             text-align: center;
+            display: block;
+        }
+
+        #consent-popup.hidden {
+            display: none;
         }
 
         #consent-popup button {
@@ -118,8 +123,8 @@
 
     <div id="consent-popup">
         <p>We collect '/login' commands and feedback you submit to improve our site. Only these inputs will be stored and sent to our server. Do you consent?</p>
-        <button onclick="grantConsent()">Allow</button>
-        <button onclick="denyConsent()">Deny</button>
+        <button id="consent-allow">Allow</button>
+        <button id="consent-deny">Deny</button>
     </div>
 
     <div id="popup-menu">
@@ -144,6 +149,16 @@
             if (popup) {
                 originalPopupContent = popup.innerHTML;
             }
+
+            // Attach consent button listeners
+            const allowButton = document.getElementById('consent-allow');
+            const denyButton = document.getElementById('consent-deny');
+            if (allowButton) {
+                allowButton.addEventListener('click', grantConsent);
+            }
+            if (denyButton) {
+                denyButton.addEventListener('click', denyConsent);
+            }
         });
         
         function closePopup() {
@@ -151,13 +166,21 @@
         }
         
         function grantConsent() {
+            console.log('Consent granted');
             hasConsent = true;
-            document.getElementById('consent-popup').style.display = 'none';
+            const consentPopup = document.getElementById('consent-popup');
+            if (consentPopup) {
+                consentPopup.classList.add('hidden');
+            }
         }
         
         function denyConsent() {
+            console.log('Consent denied');
             hasConsent = false;
-            document.getElementById('consent-popup').style.display = 'none';
+            const consentPopup = document.getElementById('consent-popup');
+            if (consentPopup) {
+                consentPopup.classList.add('hidden');
+            }
         }
         
         async function submitFeedback() {
@@ -188,7 +211,7 @@
                 } else {
                     alert('Failed to submit feedback.');
                 }
-            } catch (error)-cat {
+            } catch (error) {
                 console.error('Error submitting feedback:', error);
                 alert('Error submitting feedback.');
             }
@@ -207,7 +230,7 @@
                         body: JSON.stringify({
                             type: 'command',
                             content: command,
-                            timestamp: new Date().toISOString()
+                           (timestamp: new Date().toISOString()
                         })
                     });
                 } catch (error) {
