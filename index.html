@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="und" style="width:100%;height:100%;background-color:black;">
+<html lang="en" style="width:100%;height:100%;background-color:black;">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Eaglercraft 1.12 test directory HTML page">
     <meta name="keywords" content="eaglercraft, eaglercraftx, minecraft, 1.12, 1.12.2">
     <title>REPOSITORY CLIENT</title>
@@ -38,10 +38,6 @@
             max-height: 100%;
         }
 
-        #splash-screen.hidden {
-            display: none;
-        }
-
         #popup-menu {
             position: fixed;
             top: 0;
@@ -49,7 +45,7 @@
             width: 100%;
             background-color: rgba(30, 30, 30, 0.95);
             color: white;
-            padding: 15px 0;
+            padding: 10px 0;
             z-index: 2147483647;
             font-family: sans-serif;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -61,12 +57,6 @@
             display: inline-block;
             padding-left: 100%;
             animation: marquee 20s linear infinite;
-        }
-
-        #popup-content p {
-            display: inline;
-            margin: 0;
-            padding: 0 30px;
         }
 
         @keyframes marquee {
@@ -83,22 +73,19 @@
 
     <div id="popup-menu">
         <div id="popup-content">
-            <p>PUBES VS GOON WAR</p>
-            <p>I am testing a new feature</p>
-            <p>with an automatic news updater</p>
-            <p>Email me if you have any ideas for this</p>
+            PUBES VS GOON WAR — I am testing a new feature — with a automatic news updater — Email me if you have any ideas for this
         </div>
     </div>
 
     <script type="text/javascript">
         "use strict";
-        
+
         let originalPopupContent = '';
 
         window.addEventListener('DOMContentLoaded', () => {
-            const popup = document.getElementById('popup-content');
-            if (popup) {
-                originalPopupContent = popup.innerHTML;
+            const popupContent = document.getElementById('popup-content');
+            if (popupContent) {
+                originalPopupContent = popupContent.innerHTML;
             }
         });
 
@@ -110,9 +97,9 @@
                 const response = await fetch(popupContentUrl + '?nocache=' + Date.now());
                 if (response.ok) {
                     const newContent = await response.text();
-                    const popup = document.getElementById('popup-content');
-                    if (popup && newContent) {
-                        popup.innerHTML = newContent;
+                    const contentDiv = document.getElementById('popup-content');
+                    if (contentDiv && newContent.trim()) {
+                        contentDiv.innerHTML = newContent;
                         originalPopupContent = newContent;
                     }
                 }
@@ -125,24 +112,18 @@
         function ensurePopupVisibility() {
             const popup = document.getElementById('popup-menu');
             if (popup) {
-                document.body.appendChild(popup);
-                popup.style.zIndex = '2147483647';
-                popup.style.visibility = 'visible';
                 popup.style.display = 'block';
+                popup.style.visibility = 'visible';
                 popup.style.opacity = '1';
+                popup.style.zIndex = '2147483647';
             }
             setTimeout(ensurePopupVisibility, 1000);
         }
 
         window.addEventListener("load", async function () {
-            updatePopupContent();
-
-            window.isSplashScreenActive = true;
-            window.suppressSplashScreens = true;
-
             const splashScreen = document.getElementById("splash-screen");
             await new Promise(resolve => setTimeout(resolve, 10000));
-            window.isSplashScreenActive = false;
+            splashScreen.remove(); // Remove instead of hiding to prevent glitches
 
             const classesScript = document.createElement("script");
             classesScript.src = "classes.js";
@@ -170,8 +151,6 @@
                 document.dispatchEvent(keyEvent);
             }
 
-            splashScreen.classList.add("hidden");
-
             try {
                 if (window.location.href.indexOf("file:") === 0) {
                     alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
@@ -191,19 +170,13 @@
                 console.error("Error during game initialization:", e);
             }
 
+            updatePopupContent();
             ensurePopupVisibility();
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            const originalPopup = document.getElementById('popup-content');
-            if (originalPopup) {
-                originalPopupContent = originalPopup.innerHTML;
-            }
-
             const observer = new MutationObserver(() => {
-                const popup = document.getElementById('popup-menu');
-                const content = document.getElementById('popup-content');
-                if (!popup || !content || !document.body.contains(popup)) {
+                if (!document.getElementById('popup-menu')) {
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
                     const innerDiv = document.createElement("div");
