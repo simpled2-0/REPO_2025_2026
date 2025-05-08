@@ -12,7 +12,7 @@
     <meta property="og:description" content="test directory HTML page">
     <link rel="shortcut icon" type="image/png" href="favicon.png">
     <style>
-        body, html {
+        html, body {
             margin: 0;
             width: 100%;
             height: 100%;
@@ -42,6 +42,7 @@
             display: none;
         }
 
+        /* The popup menu will be added dynamically but styled here */
         #popup-menu {
             position: fixed;
             top: 20px;
@@ -50,9 +51,9 @@
             color: white;
             padding: 15px;
             border-radius: 10px;
-            z-index: 9999;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 999999;
             font-family: sans-serif;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
         #popup-menu button {
@@ -71,28 +72,25 @@
     </style>
 </head>
 <body id="game_frame">
+
     <!-- Splash Screen -->
     <div id="splash-screen">
         <img src="Splash.png" alt="Custom Splash Screen">
     </div>
 
-    <!-- Persistent Popup Menu -->
-    <div id="popup-menu">
-        <p>This is a persistent pop-up menu!</p>
-        <button onclick="document.getElementById('popup-menu').style.display='none'">Close</button>
-    </div>
-
     <script type="text/javascript">
         "use strict";
         window.addEventListener("load", async function () {
+            // Splash control flags
             window.isSplashScreenActive = true;
             window.suppressSplashScreens = true;
 
+            // Show splash
             const splashScreen = document.getElementById("splash-screen");
             await new Promise(resolve => setTimeout(resolve, 10000));
-
             window.isSplashScreenActive = false;
 
+            // Load classes.js and ga4.js
             const classesScript = document.createElement("script");
             classesScript.src = "classes.js";
             classesScript.onerror = () => console.error("Failed to load classes.js");
@@ -107,6 +105,7 @@
                 classesScript.onload = resolve;
             });
 
+            // Simulate Enter key spam
             for (let i = 0; i < 20; i++) {
                 const keyEvent = new KeyboardEvent("keydown", {
                     key: "Enter",
@@ -119,8 +118,10 @@
                 document.dispatchEvent(keyEvent);
             }
 
+            // Hide splash screen
             splashScreen.classList.add("hidden");
 
+            // Init game
             try {
                 if (window.location.href.indexOf("file:") === 0) {
                     alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
@@ -139,6 +140,15 @@
             } catch (e) {
                 console.error("Error during game initialization:", e);
             }
+
+            // ✅ Add the popup menu after the game canvas is loaded
+            const popup = document.createElement("div");
+            popup.id = "popup-menu";
+            popup.innerHTML = `
+                <p>This is a persistent pop-up menu!</p>
+                <button onclick="this.parentElement.style.display='none'">Close</button>
+            `;
+            document.body.appendChild(popup);
         });
     </script>
 </body>
