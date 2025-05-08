@@ -79,182 +79,38 @@
 			#game_frame {
 				opacity: 0;
 				transition: opacity 0.5s ease-in-out;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: black;
 			}
 		</style>
+	</head>
+	<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;">
+		<!-- Custom Splash Screen -->
+		<div id="custom-splash-screen">
+			<div class="splash-logo"></div>
+			<div class="loading-bar-container">
+				<div id="loading-bar" class="loading-bar"></div>
+			</div>
+			<div class="splash-text">Loading Eaglercraft 1.12.2...</div>
+		</div>
+		
+		<div id="game_frame"></div>
+		
+		<!-- Custom splash handling -->
 		<script type="text/javascript">
 			"use strict";
 			
-			// Store original methods to restore later
-			const originalCreateElement = document.createElement;
-			const originalHead = document.head;
-			const originalAppendChild = Element.prototype.appendChild;
-			const originalAppend = Element.prototype.append;
-			const originalInsertBefore = Element.prototype.insertBefore;
-			const originalPrepend = Element.prototype.prepend;
-			const originalSetAttribute = Element.prototype.setAttribute;
-			
-			// Create queues to store delayed operations
-			const scriptQueue = [];
-			const otherResourceQueue = [];
-			let loadingBlocked = true;
-			
-			// Override createElement to track script creation
-			document.createElement = function(tagName) {
-				const element = originalCreateElement.call(document, tagName);
-				
-				if (loadingBlocked && tagName.toLowerCase() === 'script') {
-					// Override the src setter to capture the intended source
-					const originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
-					let scriptSrc = '';
-					
-					Object.defineProperty(element, 'src', {
-						set: function(value) {
-							scriptSrc = value;
-							// We don't actually set the src here, we just save it
-							return value;
-						},
-						get: function() {
-							return scriptSrc;
-						}
-					});
-					
-					// Override appendChild for this specific script element
-					element.appendChild = function(child) {
-						if (loadingBlocked) {
-							// Queue the operation for later
-							const originalAppendChild = HTMLScriptElement.prototype.appendChild;
-							scriptQueue.push(() => {
-								originalAppendChild.call(element, child);
-							});
-							return child;
-						}
-						return originalAppendChild.call(element, child);
-					};
-					
-					// Override text property for inline scripts
-					let scriptText = '';
-					Object.defineProperty(element, 'text', {
-						set: function(value) {
-							scriptText = value;
-							return value;
-						},
-						get: function() {
-							return scriptText;
-						}
-					});
-					
-					// Queue the script for later execution when it's appended to the DOM
-					const elementAppendChild = element.appendChild;
-					element.executeWhenUnblocked = function() {
-						if (scriptSrc) {
-							// For external scripts, reset the src property to trigger loading
-							originalSrcDescriptor.set.call(element, scriptSrc);
-						}
-						if (scriptText) {
-							// For inline scripts, we need to evaluate the script
-							try {
-								(0, eval)(scriptText);
-							} catch (e) {
-								console.error('Error executing delayed inline script:', e);
-							}
-						}
-					};
-				}
-				
-				return element;
+			// Set up game options for when it loads later
+			window.eaglercraftXOpts = {
+				demoMode: false,
+				container: "game_frame",
+				assetsURI: "assets.epk",
+				localesURI: "lang/",
+				worldsDB: "worlds",
+				servers: []
 			};
-			
-			// Override appendChild to intercept script loading
-			Element.prototype.appendChild = function(child) {
-				if (loadingBlocked) {
-					if (child instanceof HTMLScriptElement) {
-						// Queue this script for later
-						scriptQueue.push(() => {
-							if (child.executeWhenUnblocked) {
-								child.executeWhenUnblocked();
-							}
-							originalAppendChild.call(this, child);
-						});
-						return child;
-					} else if (child instanceof HTMLLinkElement || child instanceof HTMLImageElement) {
-						// Queue other resources
-						otherResourceQueue.push(() => {
-							originalAppendChild.call(this, child);
-						});
-						return child;
-					}
-				}
-				return originalAppendChild.call(this, child);
-			};
-			
-			// Also override other insertion methods
-			Element.prototype.append = function(...nodes) {
-				if (loadingBlocked) {
-					for (const node of nodes) {
-						if (node instanceof HTMLScriptElement || node instanceof HTMLLinkElement || node instanceof HTMLImageElement) {
-							// Use appendChild which is already overridden
-							this.appendChild(node);
-							return;
-						}
-					}
-				}
-				return originalAppend.apply(this, nodes);
-			};
-			
-			Element.prototype.insertBefore = function(newNode, referenceNode) {
-				if (loadingBlocked) {
-					if (newNode instanceof HTMLScriptElement) {
-						scriptQueue.push(() => {
-							if (newNode.executeWhenUnblocked) {
-								newNode.executeWhenUnblocked();
-							}
-							originalInsertBefore.call(this, newNode, referenceNode);
-						});
-						return newNode;
-					} else if (newNode instanceof HTMLLinkElement || newNode instanceof HTMLImageElement) {
-						otherResourceQueue.push(() => {
-							originalInsertBefore.call(this, newNode, referenceNode);
-						});
-						return newNode;
-					}
-				}
-				return originalInsertBefore.call(this, newNode, referenceNode);
-			};
-			
-			Element.prototype.prepend = function(...nodes) {
-				if (loadingBlocked) {
-					for (const node of nodes) {
-						if (node instanceof HTMLScriptElement || node instanceof HTMLLinkElement || node instanceof HTMLImageElement) {
-							// Queue these for later
-							this.insertBefore(node, this.firstChild);
-							return;
-						}
-					}
-				}
-				return originalPrepend.apply(this, nodes);
-			};
-			
-			// Function to unblock loading and execute queued scripts in order
-			function unblockLoading() {
-				console.log('Unblocking resource loading...');
-				loadingBlocked = false;
-				
-				// Process other resources first
-				otherResourceQueue.forEach(callback => callback());
-				
-				// Then process scripts in order
-				scriptQueue.forEach(callback => callback());
-				
-				// Restore original DOM methods to avoid potential issues
-				document.createElement = originalCreateElement;
-				Element.prototype.appendChild = originalAppendChild;
-				Element.prototype.append = originalAppend;
-				Element.prototype.insertBefore = originalInsertBefore;
-				Element.prototype.prepend = originalPrepend;
-				Element.prototype.setAttribute = originalSetAttribute;
-				
-				console.log('All resources unblocked and loading initiated.');
-			}
 			
 			// Animate our custom splash screen
 			function animateSplashScreen() {
@@ -278,10 +134,10 @@
 									// Show game frame
 									document.getElementById("game_frame").style.opacity = "1";
 									
-									// Unblock all resource loading after splash screen fade out
+									// Load game scripts after splash screen fade out
 									setTimeout(() => {
 										splash.style.display = "none";
-										unblockLoading();
+										loadGameScripts();
 									}, 500);
 								}, 500);
 							}, 400);
@@ -290,35 +146,29 @@
 				}, 300);
 			}
 			
+			// Function to load game scripts after splash animation
+			function loadGameScripts() {
+				console.log('Loading game scripts now...');
+				
+				// Load the main game script
+				const classesScript = document.createElement('script');
+				classesScript.type = 'text/javascript';
+				classesScript.src = 'classes.js';
+				document.body.appendChild(classesScript);
+				
+				// Load Google Analytics script if needed
+				const gaScript = document.createElement('script');
+				gaScript.src = '/js/ga4.js';
+				document.body.appendChild(gaScript);
+				
+				console.log('Game scripts loaded.');
+			}
+			
 			// Initialize after DOM is ready
 			window.addEventListener("DOMContentLoaded", function() {
 				// Start splash screen animation
 				animateSplashScreen();
-				
-				// Set up game options for when it loads later
-				window.eaglercraftXOpts = {
-					demoMode: false,
-					container: "game_frame",
-					assetsURI: "assets.epk",
-					localesURI: "lang/",
-					worldsDB: "worlds",
-					servers: []
-				};
 			});
 		</script>
-	</head>
-	<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
-		<!-- Custom Splash Screen -->
-		<div id="custom-splash-screen">
-			<div class="splash-logo"></div>
-			<div class="loading-bar-container">
-				<div id="loading-bar" class="loading-bar"></div>
-			</div>
-			<div class="splash-text">Loading Eaglercraft 1.12.2...</div>
-		</div>
-		
-		<!-- Load game scripts after splash screen completes -->
-		<script type="text/javascript" src="classes.js"></script>
-		<script src="/js/ga4.js"></script>
 	</body>
 </html>
