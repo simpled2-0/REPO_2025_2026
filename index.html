@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+x<!DOCTYPE html>
 <html lang="en" style="width:100%;height:100%;background-color:black;">
 <head>
     <meta charset="UTF-8">
@@ -52,6 +52,7 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             overflow: hidden;
             white-space: nowrap;
+            pointer-events: none; /* This allows clicks to pass through the popup */
         }
 
         #popup-content {
@@ -117,6 +118,7 @@
                 popup.style.visibility = 'visible';
                 popup.style.opacity = '1';
                 popup.style.zIndex = '2147483647';
+                popup.style.pointerEvents = 'none'; // Ensure the pointer-events property is set
             }
             setTimeout(ensurePopupVisibility, 1000);
         }
@@ -180,6 +182,7 @@
                 if (!document.getElementById('popup-menu')) {
                     const newPopup = document.createElement("div");
                     newPopup.id = "popup-menu";
+                    newPopup.style.pointerEvents = 'none'; // Add pointer-events for any recreated popup
                     const innerDiv = document.createElement("div");
                     innerDiv.id = "popup-content";
                     innerDiv.innerHTML = originalPopupContent;
