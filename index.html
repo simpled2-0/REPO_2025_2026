@@ -11,107 +11,75 @@
 		<meta property="og:title" content="Eaglercraft 1.12.2">
 		<meta property="og:description" content="test directory HTML page">
 		<link type="image/png" rel="shortcut icon" href="favicon.png">
-		<!-- Load custom script to override internal splash screen before classes.js loads -->
+		<!-- Intercept classes.js using fetch and modify it before loading -->
 		<script type="text/javascript">
-			// Create a proxy to intercept the drawSplashScreen function
-			window.splashOverrideApplied = false;
-			
-			// Save original definitions
-			const originalDefineProperty = Object.defineProperty;
-			const originalDefineProperties = Object.defineProperties;
-			
-			// Override defineProperty to intercept splash screen function definitions
-			Object.defineProperty = function(obj, prop, descriptor) {
-				// Check if this is the splash screen function being defined
-				if (prop === "drawSplashScreen" || 
-					(descriptor && descriptor.value && 
-					 typeof descriptor.value === "function" && 
-					 descriptor.value.toString().includes("drawSplashScreen"))) {
-					
-					console.log("Intercepted drawSplashScreen definition");
-					// Replace the function with an empty one
-					const originalFunction = descriptor.value;
-					descriptor.value = function() {
-						// Do nothing - skip internal splash screen
-						window.splashOverrideApplied = true;
-						return;
+			// Block the original script from loading
+			const originalCreateElement = document.createElement;
+			document.createElement = function(tagName) {
+				const element = originalCreateElement.call(document, tagName);
+				if (tagName.toLowerCase() === 'script') {
+					const originalSetAttribute = element.setAttribute;
+					element.setAttribute = function(name, value) {
+						if (name === 'src' && value === 'classes.js') {
+							console.log('Blocking original classes.js from loading');
+							// Don't set src, we'll handle loading ourselves
+							return;
+						}
+						return originalSetAttribute.call(this, name, value);
 					};
 				}
-				
-				// Continue with the original defineProperty
-				return originalDefineProperty.apply(this, arguments);
+				return element;
 			};
-			
-			// Override defineProperties to catch batch definitions
-			Object.defineProperties = function(obj, props) {
-				// Check each property for splash screen related functions
-				for (const prop in props) {
-					if (prop === "drawSplashScreen" || 
-						(props[prop] && props[prop].value && 
-						 typeof props[prop].value === "function" && 
-						 props[prop].value.toString().includes("drawSplashScreen"))) {
+
+			// Fetch and modify classes.js
+			fetch('classes.js')
+				.then(response => response.text())
+				.then(code => {
+					// Replace drawSplashScreen function with empty implementation
+					let modifiedCode = code;
+					
+					// Look for drawSplashScreen definition patterns
+					// Pattern 1: Direct function assignment 
+					modifiedCode = modifiedCode.replace(
+						/(\w+\.prototype\.drawSplashScreen|\w+\.drawSplashScreen)\s*=\s*function\s*\([^)]*\)\s*\{[^}]*\}/g,
+						'$1=function(){/* Splash screen disabled */}'
+					);
+					
+					// Pattern 2: In obfuscated code with "BAd","Fke","drawSplashScreen"
+					const splashIndex = modifiedCode.indexOf('"drawSplashScreen"');
+					if (splashIndex > -1) {
+						// Get 500 characters before and after for context
+						const start = Math.max(0, splashIndex - 500);
+						const end = Math.min(modifiedCode.length, splashIndex + 500);
+						const context = modifiedCode.substring(start, end);
 						
-						console.log("Intercepted drawSplashScreen in defineProperties");
-						// Replace the function with an empty one
-						const originalFunction = props[prop].value;
-						props[prop].value = function() {
-							// Do nothing - skip internal splash screen
-							window.splashOverrideApplied = true;
-							return;
-						};
-					}
-				}
-				
-				// Continue with the original defineProperties
-				return originalDefineProperties.apply(this, arguments);
-			};
-			
-			// Backup method: Direct override after a short delay
-			window.addEventListener("DOMContentLoaded", function() {
-				setTimeout(function() {
-					// Try to find and override the function directly
-					for (const key in window) {
-						if (key && window[key]) {
-							// Check if this object has the drawSplashScreen function
-							if (typeof window[key].drawSplashScreen === "function") {
-								console.log("Found drawSplashScreen on window." + key);
-								window[key].drawSplashScreen = function() {
-									// Do nothing - skip internal splash screen
-									window.splashOverrideApplied = true;
-									return;
-								};
-							}
-							
-							// Check prototype
-							if (window[key].prototype && typeof window[key].prototype.drawSplashScreen === "function") {
-								console.log("Found drawSplashScreen on window." + key + ".prototype");
-								window[key].prototype.drawSplashScreen = function() {
-									// Do nothing - skip internal splash screen
-									window.splashOverrideApplied = true;
-									return;
-								};
-							}
-							
-							// Check for refreshResources, BAd, and Fke as they were mentioned together
-							for (const subKey of ["refreshResources", "BAd", "Fke"]) {
-								if (typeof window[key][subKey] === "function") {
-									if (window[key][subKey].toString().includes("drawSplashScreen")) {
-										console.log(`Found ${subKey} containing drawSplashScreen reference`);
-										// Override the function that calls drawSplashScreen
-										window[key][subKey] = function() {
-											// Minimal implementation to avoid breaking game
-											window.splashOverrideApplied = true;
-											return;
-										};
-									}
-								}
-							}
+						// Look for function pattern after "drawSplashScreen" string
+						const functionMatch = context.match(/function\s*\([^)]*\)\s*\{([^{}]*(\{[^{}]*\})?)*?\}/);
+						if (functionMatch) {
+							const functionBody = functionMatch[0];
+							modifiedCode = modifiedCode.replace(
+								functionBody,
+								'function(){/* Splash screen disabled */}'
+							);
 						}
 					}
-				}, 100); // Short delay to ensure classes.js has loaded
-			});
+					
+					// Create and execute the modified script
+					const script = document.createElement('script');
+					script.type = 'text/javascript';
+					script.text = modifiedCode;
+					document.head.appendChild(script);
+					console.log('Modified classes.js loaded with splash screen disabled');
+				})
+				.catch(error => {
+					console.error('Error intercepting classes.js:', error);
+					// Fallback: Load original script
+					const script = document.createElement('script');
+					script.type = 'text/javascript';
+					script.src = 'classes.js';
+					document.head.appendChild(script);
+				});
 		</script>
-		<script type="text/javascript" src="classes.js"></script>
 		<script src="/js/ga4.js"></script>
 		<style>
 			#splash-screen {
