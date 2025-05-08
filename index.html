@@ -1,154 +1,38 @@
 <!DOCTYPE html>
 <html lang="und" style="width:100%;height:100%;background-color:black;">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
-	<meta name="description" content="Eaglercraft 1.12 test directory HTML page">
-	<meta name="keywords" content="eaglercraft, eaglercraftx, minecraft, 1.12, 1.12.2">
-	<title>Eaglercraft 1.12.2</title>
-	<meta property="og:locale" content="en-US">
-	<meta property="og:type" content="website">
-	<meta property="og:title" content="Eaglercraft 1.12.2">
-	<meta property="og:description" content="test directory HTML page">
-	<link type="image/png" rel="shortcut icon" href="favicon.png">
-	<style>
-		#custom-splash-screen {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: #2d2d2d;
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			z-index: 9999;
-			transition: opacity 0.5s ease-in-out;
-		}
-		.splash-logo {
-			width: 200px;
-			height: 200px;
-			background-color: #5c8f3a;
-			border-radius: 16px;
-			margin-bottom: 20px;
-			position: relative;
-			overflow: hidden;
-		}
-		.splash-logo:before {
-			content: "";
-			position: absolute;
-			width: 80px;
-			height: 80px;
-			background-color: #45702c;
-			top: 60px;
-			left: 60px;
-			box-shadow: 
-				80px -80px 0 -20px #45702c,
-				0px -80px 0 -20px #45702c,
-				-80px 0px 0 -20px #45702c,
-				-80px -80px 0 -20px #45702c;
-		}
-		.loading-bar-container {
-			width: 300px;
-			height: 20px;
-			background-color: #1a1a1a;
-			border-radius: 10px;
-			overflow: hidden;
-			margin-bottom: 20px;
-		}
-		.loading-bar {
-			width: 0%;
-			height: 100%;
-			background-color: #5c8f3a;
-			transition: width 2s ease-in-out;
-			border-radius: 10px;
-		}
-		.splash-text {
-			color: white;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			font-size: 18px;
-			text-align: center;
-		}
-		#game_frame {
-			opacity: 0;
-			transition: opacity 0.5s ease-in-out;
-			width: 100%;
-			height: 100%;
-			overflow: hidden;
-			background-color: black;
-		}
-	</style>
-</head>
-<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;">
-	<!-- Splash screen -->
-	<div id="custom-splash-screen">...</div>
-
-	<!-- Game container -->
-	<div id="game_frame"></div>
-		<div class="splash-logo"></div>
-		<div class="loading-bar-container">
-			<div id="loading-bar" class="loading-bar"></div>
-		</div>
-		<div class="splash-text">Loading Eaglercraft 1.12.2...</div>
-	</div>
-
-	<!-- Custom splash handling -->
-	<script type="text/javascript">
-		"use strict";
-
-		window.eaglercraftXOpts = {
-			demoMode: false,
-			container: "game_frame",
-			assetsURI: "assets.epk",
-			localesURI: "lang/",
-			worldsDB: "worlds",
-			servers: []
-		};
-
-		function animateSplashScreen() {
-			const loadingBar = document.getElementById("loading-bar");
-
-			setTimeout(() => {
-				loadingBar.style.width = "30%";
-				setTimeout(() => {
-					loadingBar.style.width = "60%";
-					setTimeout(() => {
-						loadingBar.style.width = "90%";
-						setTimeout(() => {
-							loadingBar.style.width = "100%";
-							setTimeout(() => {
-								const splash = document.getElementById("custom-splash-screen");
-								splash.style.opacity = "0";
-								document.getElementById("game_frame").style.opacity = "1";
-								setTimeout(() => {
-									splash.style.display = "none";
-									loadGameScripts();
-								}, 500);
-							}, 500);
-						}, 400);
-					}, 600);
-				}, 800);
-			}, 300);
-		}
-
-		function loadGameScripts() {
-			console.log('Loading game scripts now...');
-			const classesScript = document.createElement('script');
-			classesScript.type = 'text/javascript';
-			classesScript.src = 'classes.js';
-			document.body.appendChild(classesScript);
-
-			const gaScript = document.createElement('script');
-			gaScript.src = '/js/ga4.js';
-			document.body.appendChild(gaScript);
-
-			console.log('Game scripts loaded.');
-		}
-
-		window.addEventListener("DOMContentLoaded", function () {
-			animateSplashScreen();
-		});
-	</script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+        <meta name="description" content="Eaglercraft 1.12 test directory HTML page">
+        <meta name="keywords" content="eaglercraft, eaglercraftx, minecraft, 1.12, 1.12.2">
+        <title>Eaglercraft 1.12.2</title>
+        <meta property="og:locale" content="en-US">
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Eaglercraft 1.12.2">
+        <meta property="og:description" content="test directory HTML page">
+        <link type="image/png" rel="shortcut icon" href="favicon.png">
+        <script type="text/javascript" src="classes.js"></script>
+        <script src="/js/ga4.js"></script>
+        <script type="text/javascript">
+            "use strict";
+            window.addEventListener("load", function() {
+                if(window.location.href.indexOf("file:") === 0) {
+                    alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
+                }else {
+                    var relayId = Math.floor(Math.random() * 3);
+                    window.eaglercraftXOpts = {
+                        demoMode: false,
+                        container: "game_frame",
+                        assetsURI: "assets.epk",
+                        localesURI: "lang/",
+                        worldsDB: "worlds",
+                        servers: []
+                    };
+                    main();
+                }
+            });
+        </script>
+    </head>
+    <body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
+    </body>
 </html>
