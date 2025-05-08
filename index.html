@@ -1,4 +1,4 @@
-x<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" style="width:100%;height:100%;background-color:black;">
 <head>
     <meta charset="UTF-8">
@@ -53,6 +53,9 @@ x<!DOCTYPE html>
             overflow: hidden;
             white-space: nowrap;
             pointer-events: none; /* This allows clicks to pass through the popup */
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         #popup-content {
@@ -64,6 +67,14 @@ x<!DOCTYPE html>
         @keyframes marquee {
             0% { transform: translateX(0); }
             100% { transform: translateX(-100%); }
+        }
+        
+        /* Force visibility class */
+        .force-visible {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            color: white !important;
         }
     </style>
 </head>
@@ -119,6 +130,35 @@ x<!DOCTYPE html>
                 popup.style.opacity = '1';
                 popup.style.zIndex = '2147483647';
                 popup.style.pointerEvents = 'none'; // Ensure the pointer-events property is set
+                
+                // Force the element to be visible through the CSS class list
+                popup.classList.add('force-visible');
+                
+                // Make sure the color is visible
+                popup.style.color = 'white';
+                
+                // Check if the child content is visible
+                const content = document.getElementById('popup-content');
+                if (content) {
+                    content.style.display = 'inline-block';
+                    content.style.visibility = 'visible';
+                    content.style.opacity = '1';
+                }
+            } else {
+                // If popup doesn't exist, recreate it
+                const newPopup = document.createElement("div");
+                newPopup.id = "popup-menu";
+                newPopup.style.pointerEvents = 'none';
+                newPopup.style.display = 'block';
+                newPopup.style.visibility = 'visible';
+                newPopup.style.opacity = '1';
+                newPopup.style.zIndex = '2147483647';
+                
+                const innerDiv = document.createElement("div");
+                innerDiv.id = "popup-content";
+                innerDiv.innerHTML = originalPopupContent || 'POPUP MESSAGE';
+                newPopup.appendChild(innerDiv);
+                document.body.appendChild(newPopup);
             }
             setTimeout(ensurePopupVisibility, 1000);
         }
