@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
         <meta name="description" content="Eaglercraft 1.12 test directory HTML page">
         <meta name="keywords" content="eaglercraft, eaglercraftx, minecraft, 1.12, 1.12.2">
-        <title>Repository Client</title>
+        <title>Eaglercraft 1.12.2</title>
         <meta property="og:locale" content="en-US">
         <meta property="og:type" content="website">
         <meta property="og:title" content="Eaglercraft 1.12.2">
@@ -18,7 +18,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: white;
+                background-color: black;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -35,7 +35,7 @@
     </head>
     <body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
         <div id="splash-screen">
-            <img src="Splash.png" alt="Eaglercraft Logo">
+            <img src="your_splash_image.png" alt="Custom Splash Screen">
         </div>
         <script type="text/javascript">
             "use strict";
@@ -47,6 +47,35 @@
                 // Show splash screen for 5 seconds
                 const splashScreen = document.getElementById("splash-screen");
                 await new Promise(resolve => setTimeout(resolve, 5000));
+
+                // Clear isSplashScreenActive flag but keep suppressSplashScreens
+                window.isSplashScreenActive = false;
+
+                // MutationObserver to suppress or modify splash screens from classes.js
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeName === "IMG") {
+                                // Replace image source with custom splash image
+                                node.src = "your_splash_image.png";
+                                // Alternatively, hide the image if it's an unwanted splash screen
+                                if (window.suppressSplashScreens) {
+                                    node.style.display = "none";
+                                }
+                            } else if (node.nodeType === 1 && node.querySelectorAll) {
+                                // Check for images in added elements
+                                const images = node.querySelectorAll("img");
+                                images.forEach((img) => {
+                                    img.src = "your_splash_image.png";
+                                    if (window.suppressSplashScreens) {
+                                        img.style.display = "none";
+                                    }
+                                });
+                            }
+                        });
+                    });
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
 
                 // Dynamically load scripts
                 const classesScript = document.createElement("script");
@@ -74,10 +103,12 @@
                     });
                     document.dispatchEvent(keyEvent);
                 }
-// Clear isSplashScreenActive flag but keep suppressSplashScreens
-                window.isSplashScreenActive = false;
+
                 // Hide splash screen after scripts are loaded and game is initialized
                 splashScreen.classList.add("hidden");
+
+                // Stop observing after initialization to avoid performance issues
+                observer.disconnect();
 
                 // Original initialization code
                 if (window.location.href.indexOf("file:") === 0) {
@@ -96,9 +127,13 @@
                 }
             });
 
-            // Note: Ensure classes.js and ga4.js check window.suppressSplashScreens
-            // and skip their splash screen logic if true. Example in classes.js or ga4.js:
-            // if (window.suppressSplashScreens) { return; /* skip splash screen */ }
+            // Note: Since classes.js is obfuscated, this script uses a MutationObserver
+            // to detect and suppress or modify any <img> elements it adds, setting their
+            // src to your_splash_image.png or hiding them. If you need to modify classes.js
+            // directly, search for .png strings to find image paths and replace them with
+            // your_splash_image.png, or use a deobfuscation tool like JS Beautifier.
+        </jonas:// If classes.js or ga4.js don't respect window.suppressSplashScreens,
+        // their splash screens are suppressed via the MutationObserver.
         </script>
     </body>
 </html>
