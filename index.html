@@ -11,7 +11,7 @@
         <meta property="og:title" content="Eaglercraft 1.12.2">
         <meta property="og:description" content="test directory HTML page">
         <link type="image/png" rel="shortcut icon" href="favicon.png">
-        <styleellery
+        <style>
             #splash-screen {
                 position: fixed;
                 top: 0;
@@ -28,11 +28,15 @@
                 max-width: 50%;
                 max-height: 50%;
             }
+            #splash-screen.black {
+                display: block;
+                background-color: black;
+            }
             #splash-screen.hidden {
                 display: none;
             }
         </style>
-    >/head>
+    </head>
     <body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
         <div id="splash-screen">
             <img src="favicon.png" alt="Eaglercraft Logo">
@@ -43,35 +47,26 @@
                 // Set flag to indicate main splash screen is active
                 window.isSplashScreenActive = true;
 
-                // Override DOM methods to block potential splash screens
-                const originalCreateElement = document.createElement;
-                const originalAppendChild = document.body.appendChild;
-                document.createElement = function(tagName) {
-                    if (window.isSplashScreenActive && (tagName === 'div' || tagName === 'canvas')) {
-                        console.warn('Blocked creation of potential splash screen element:', tagName);
-                        return null;
-                    }
-                    return originalCreateElement.apply(document, arguments);
-                };
-                document.body.appendChild = function(element) {
-                    if (window.isSplashScreenActive && element && (element.tagName === 'DIV' || element.tagName === 'CANVAS')) {
-                        console.warn('Blocked appending of potential splash screen element:', element);
-                        return element;
-                    }
-                    return originalAppendChild.apply(document.body, arguments);
-                };
-
                 // Show splash screen for 5 seconds
                 const splashScreen = document.getElementById("splash-screen");
                 await new Promise(resolve => setTimeout(resolve, 5000));
-                splashScreen.classList.add("hidden");
 
-                // Restore DOM methods and clear flag
-                document.createElement = originalCreateElement;
-                document.body.appendChild = originalAppendChild;
+                // Switch to black screen
+                splashScreen.innerHTML = ''; // Remove logo
+                splashScreen.classList.add("black");
+
+                // Clear splash screen flag
                 window.isSplashScreenActive = false;
 
-                // Dynamically load scripts after splash screen
+                // Simulate a mouse click
+                const clickEvent = new MouseEvent("click", {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.dispatchEvent(clickEvent);
+
+                // Dynamically load scripts
                 const classesScript = document.createElement("script");
                 classesScript.src = "classes.js";
                 document.head.appendChild(classesScript);
@@ -85,7 +80,7 @@
                     classesScript.onload = resolve;
                 });
 
-                // Original initialization code with added splash screen suppression
+                // Original initialization code
                 if (window.location.href.indexOf("file:") === 0) {
                     alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
                 } else {
@@ -96,19 +91,16 @@
                         assetsURI: "assets.epk",
                         localesURI: "lang/",
                         worldsDB: "worlds",
-                        servers: [],
-                        disableSplashScreen: true // Signal to classes.js to skip its splash screen
+                        servers: []
                     };
                     main();
                 }
             });
 
             // Note: If classes.js creates its own splash screen, ensure it checks
-            // window.isSplashScreenActive or window.eaglercraftXOpts.disableSplashScreen
-            // and skips its splash screen logic if either is true. Example in classes.js:
-            // if (window.isSplashScreenActive || window.eaglercraftXOpts.disableSplashScreen) {
-            //     return; /* skip splash screen */
-            // }
+            // window.isSplashScreenActive and skips its splash screen logic if true.
+            // Example in classes.js:
+            // if (window.isSplashScreenActive) { return; /* skip splash screen */ }
         </script>
     </body>
 </html>
