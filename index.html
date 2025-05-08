@@ -64,14 +64,17 @@
                     classesScript.onload = resolve;
                 });
 
-                // Simulate 20 mouse clicks after scripts are loaded
+                // Simulate 20 key presses (Enter key)
                 for (let i = 0; i < 20; i++) {
-                    const clickEvent = new MouseEvent("click", {
-                        view: window,
+                    const keyEvent = new KeyboardEvent("keydown", {
+                        key: "Enter",
+                        code: "Enter",
+                        keyCode: 13,
+                        which: 13,
                         bubbles: true,
                         cancelable: true
                     });
-                    document.dispatchEvent(clickEvent);
+                    document.dispatchEvent(keyEvent);
                 }
 
                 // Hide splash screen after scripts are loaded and game is initialized
