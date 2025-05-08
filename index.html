@@ -66,6 +66,22 @@
                 });
                 document.dispatchEvent(clickEvent);
 
+                // Simulate a mouse click
+                const clickEvent = new MouseEvent("click", {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.dispatchEvent(clickEvent);
+
+                // Simulate a mouse click
+                const clickEvent = new MouseEvent("click", {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.dispatchEvent(clickEvent);
+
                 // Dynamically load scripts
                 const classesScript = document.createElement("script");
                 classesScript.src = "classes.js";
